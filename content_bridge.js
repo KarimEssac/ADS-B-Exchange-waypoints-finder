@@ -43,12 +43,32 @@
 
   // ── POPUP → PAGE: relay toggle / fly-to commands ──────────────────────────
   chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
-    if (msg && msg.__wpt_source === "popup") {
-      window.postMessage({ ...msg, __wpt_source: "bridge" }, "*");
-      // Respond so the popup knows the message was received
-      sendResponse({ ok: true });
+    if (!msg || msg.__wpt_source !== "popup") return true;
+
+    if (msg.type === "WPT_GET_BBOX") {
+      // Need a real reply — attach a unique reply id, listen for the page's answer
+      const replyId = "__bbox_" + Date.now() + "_" + Math.random();
+      const onReply = (event) => {
+        if (event.source !== window) return;
+        const d = event.data;
+        if (!d || d.__wpt_source !== "page" || d.__wpt_bbox_reply_id !== replyId) return;
+        window.removeEventListener("message", onReply);
+        sendResponse({ bbox: d.bbox });
+      };
+      window.addEventListener("message", onReply);
+      // Timeout safety — don't leave the listener dangling
+      setTimeout(() => {
+        window.removeEventListener("message", onReply);
+        sendResponse({ bbox: null });
+      }, 3000);
+      window.postMessage({ ...msg, __wpt_source: "bridge", __wpt_bbox_reply_id: replyId }, "*");
+      return true; // async response
     }
-    return true; // Keep channel open for async
+
+    // All other popup messages (toggles, fly-to) are fire-and-forget
+    window.postMessage({ ...msg, __wpt_source: "bridge" }, "*");
+    sendResponse({ ok: true });
+    return true;
   });
 
 })();

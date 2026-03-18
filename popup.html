@@ -137,6 +137,18 @@
     .switch input:checked + .slider { background: #1f6feb; }
     .switch input:checked + .slider::before { transform: translateX(16px); }
 
+    /* Area search toggle — green when All USA, blue when Current View */
+    .area-toggle-row { margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #21262d; }
+    .area-label-usa     { font-size: 11px; font-weight: 600; transition: color 0.2s; }
+    .area-label-view    { font-size: 11px; font-weight: 600; transition: color 0.2s; }
+    #togAreaSearch:not(:checked) ~ .area-labels .area-label-usa  { color: #3fb950; }
+    #togAreaSearch:not(:checked) ~ .area-labels .area-label-view { color: #484f58; }
+    #togAreaSearch:checked       ~ .area-labels .area-label-usa  { color: #484f58; }
+    #togAreaSearch:checked       ~ .area-labels .area-label-view { color: #58a6ff; }
+    /* Override slider color: green for All USA (unchecked), blue for Current View (checked) */
+    #togAreaSearch:not(:checked) + .slider { background: #3fb950; }
+    #togAreaSearch:checked       + .slider { background: #1f6feb; }
+
     .search-section {
       padding: 12px 16px;
       border-bottom: 1px solid #21262d;
@@ -298,6 +310,18 @@
 
   <div class="search-section">
     <div class="section-title">Search Waypoint</div>
+
+    <div class="toggle-row area-toggle-row">
+      <div class="toggle-label">
+        <div class="dot-icon" id="areaSearchDot" style="background:#3fb950"></div>
+        <span id="areaSearchLabel">All USA</span>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="togAreaSearch">
+        <div class="slider"></div>
+      </label>
+    </div>
+
     <input
       type="text"
       class="search-box"

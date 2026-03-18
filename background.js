@@ -12,7 +12,7 @@ let LOADING = false;     // prevent double-loading
 // ─── IndexedDB caching ────────────────────────────────────────────────────────
 const DB_NAME = "AdsbWptCache";
 const STORE_NAME = "fixes";
-const CACHE_VERSION = 8; // Bumped: increase spatial dedup for intersections
+const CACHE_VERSION = 10; // Bumped: added airport ICAO field for P-section fixes
 
 function openDb() {
   return new Promise((resolve, reject) => {
@@ -181,11 +181,26 @@ function parseCifp(text) {
       if (lat < 15 || lat > 72) continue;
       if (lon < -180 || lon > -60) continue;
 
-      const type = lineType(line);
+      let type = lineType(line);
+
+      // Waypoints (fixes/airports) must have exactly 5-letter idents.
+      // Shorter idents that aren't VORs or NDBs are procedure/approach fixes
+      // that belong visually with intersections, not named waypoints.
+      if ((type === "fix" || type === "airport") && ident.length !== 5) {
+        type = "intersect";
+      }
 
       let name = undefined;
+      let airport = undefined;
+
       if ((type === "vor" || type === "ndb") && line.length > 93) {
         name = line.substring(93, 123).trim();
+      }
+
+      // For P-section (airport procedure) records, cols 6-10 hold the airport ICAO
+      if (line[4] === 'P' && line.length >= 10) {
+        const icao = line.substring(6, 10).trim();
+        if (icao && /^[A-Z0-9]{3,4}$/.test(icao)) airport = icao;
       }
 
       // Exact dedup: same ident + tightly rounded coords
@@ -209,7 +224,7 @@ function parseCifp(text) {
         identCoords.set(ident, [{ lat, lon }]);
       }
 
-      FIXES.push({ ident, lat, lon, type, name });
+      FIXES.push({ ident, lat, lon, type, name, airport });
       count++;
     } catch (_) {}
   }
@@ -239,6 +254,22 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       });
       return true; // async response
     }
+  }
+
+  if (msg.type === "GET_SETTINGS") {
+    chrome.storage.local.get(
+      ["wpt_enabled", "wpt_showFixes", "wpt_showIntersects", "wpt_showVors", "wpt_showNdbs"],
+      (data) => {
+        sendResponse({
+          enabled:       data.wpt_enabled       !== undefined ? data.wpt_enabled       : true,
+          showFixes:     data.wpt_showFixes      !== undefined ? data.wpt_showFixes     : true,
+          showIntersects:data.wpt_showIntersects !== undefined ? data.wpt_showIntersects: true,
+          showVors:      data.wpt_showVors       !== undefined ? data.wpt_showVors      : true,
+          showNdbs:      data.wpt_showNdbs       !== undefined ? data.wpt_showNdbs      : true,
+        });
+      }
+    );
+    return true; // async response
   }
 
   if (msg.type === "GET_STATUS") {
@@ -316,7 +347,15 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
       const maxDist = Math.max(1, Math.floor(qs.length / 2) + (qs.length > 4 ? 1 : 0));
 
+      // If a bounding box was supplied, pre-build a fast lookup set of in-bbox idents
+      const bboxFilter = msg.bbox || null;
+
       for (const f of FIXES) {
+        if (f.type === "intersect") continue; // intersections are not searchable
+        if (bboxFilter) {
+          const { minLat, maxLat, minLon, maxLon } = bboxFilter;
+          if (f.lat < minLat || f.lat > maxLat || f.lon < minLon || f.lon > maxLon) continue;
+        }
         const id = f.ident.toLowerCase();
         let score = 0;
         

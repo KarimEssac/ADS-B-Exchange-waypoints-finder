@@ -96,7 +96,53 @@ togIntersects.addEventListener("change", () => sendToggle("showIntersects", togI
 togVors.addEventListener("change",  () => sendToggle("showVors",  togVors.checked));
 togNdbs.addEventListener("change",  () => sendToggle("showNdbs",  togNdbs.checked));
 
-// ── Search ────────────────────────────────────────────────────────────────────
+const togAreaSearch = document.getElementById("togAreaSearch");
+const areaSearchDot   = document.getElementById("areaSearchDot");
+const areaSearchLabel = document.getElementById("areaSearchLabel");
+
+function updateAreaToggleVisuals(isAreaMode) {
+  if (isAreaMode) {
+    areaSearchDot.style.background   = "#58a6ff";
+    areaSearchLabel.textContent      = "Current View";
+    areaSearchLabel.style.color      = "#58a6ff";
+  } else {
+    areaSearchDot.style.background   = "#3fb950";
+    areaSearchLabel.textContent      = "All USA";
+    areaSearchLabel.style.color      = "#e6edf3";
+  }
+}
+
+// ── Restore area search toggle state ─────────────────────────────────────────
+chrome.storage.local.get("wpt_areaSearch", (data) => {
+  if (data.wpt_areaSearch !== undefined) togAreaSearch.checked = data.wpt_areaSearch;
+  updateAreaToggleVisuals(togAreaSearch.checked);
+});
+
+togAreaSearch.addEventListener("change", () => {
+  chrome.storage.local.set({ wpt_areaSearch: togAreaSearch.checked });
+  updateAreaToggleVisuals(togAreaSearch.checked);
+  // Re-run search with new scope if there's an active query
+  const q = searchBox.value.trim();
+  if (q) doSearch(q);
+});
+
+// ── Helper: get current map bbox from content script ─────────────────────────
+async function getMapBbox() {
+  try {
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tabs[0]) return null;
+    await ensureContentScripts(tabs[0].id);
+    const res = await chrome.tabs.sendMessage(tabs[0].id, {
+      __wpt_source: "popup",
+      type: "WPT_GET_BBOX"
+    });
+    return res && res.bbox ? res.bbox : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+
 let _searchTimer = null;
 
 searchBox.addEventListener("input", () => {
@@ -109,8 +155,21 @@ searchBox.addEventListener("input", () => {
 async function doSearch(q) {
   searchResults.innerHTML = `<div class="no-results">Searching…</div>`;
   try {
-    const res = await chrome.runtime.sendMessage({ type: "SEARCH_FIX", query: q.toUpperCase() });
-    renderResults(res.fixes || []);
+    const [res, bbox] = await Promise.all([
+      chrome.runtime.sendMessage({ type: "SEARCH_FIX", query: q.toUpperCase() }),
+      togAreaSearch.checked ? getMapBbox() : Promise.resolve(null)
+    ]);
+
+    let fixes = res.fixes || [];
+
+    if (togAreaSearch.checked && bbox) {
+      fixes = fixes.filter(f =>
+        f.lat >= bbox.minLat && f.lat <= bbox.maxLat &&
+        f.lon >= bbox.minLon && f.lon <= bbox.maxLon
+      );
+    }
+
+    renderResults(fixes);
   } catch (e) {
     searchResults.innerHTML = `<div class="no-results">Error searching</div>`;
   }
@@ -124,10 +183,11 @@ function renderResults(fixes) {
 
   searchResults.innerHTML = fixes.map(f => {
     const nameStr = f.name ? ` <span style="color:#8b949e;font-weight:normal">(${f.name})</span>` : "";
+    const airportStr = f.airport ? `<span style="color:#3fb950;font-size:10px;margin-left:5px;background:#0d2b12;border-radius:3px;padding:1px 4px;">${f.airport}</span>` : "";
     return `
     <div class="result-item" data-lat="${f.lat}" data-lon="${f.lon}" data-ident="${f.ident}">
       <div>
-        <div class="result-ident" style="color:${typeColor(f.type)}">${f.ident}${nameStr}</div>
+        <div class="result-ident" style="color:${typeColor(f.type)}">${f.ident}${nameStr}${airportStr}</div>
         <div class="result-coords">${f.lat.toFixed(4)}° / ${f.lon.toFixed(4)}°</div>
       </div>
       <span class="result-type">${typeLabel(f.type)}</span>

@@ -47,6 +47,16 @@
       flyToFix(msg.lat, msg.lon, msg.zoom);
       return;
     }
+    if (msg.type === "WPT_GET_BBOX") {
+      const bbox = getMapBounds();
+      // Reply directly to the bridge's dedicated bbox listener (not the bg relay)
+      window.postMessage({
+        __wpt_source: "page",
+        __wpt_bbox_reply_id: msg.__wpt_bbox_reply_id,
+        bbox: bbox
+      }, "*");
+      return;
+    }
 
     const id = msg.__wpt_req_id;
     if (id !== undefined && _pending.has(id)) {
@@ -348,15 +358,19 @@
     return null;
   }
 
+  let _copiedUntil = 0; // timestamp — tooltip is locked while Date.now() < _copiedUntil
+
   function onClick(e) {
     const fix = getFixNearMouse(e);
     if (fix) {
       const lowerIdent = fix.ident.toLowerCase();
       navigator.clipboard.writeText(lowerIdent).then(() => {
         if (tooltip) {
-          const orig = tooltip.innerHTML;
+          const COPY_DURATION = 2000; // ms to keep "Copied" visible
+          _copiedUntil = Date.now() + COPY_DURATION;
           tooltip.innerHTML = `<span style="color:#3fb950;font-weight:bold;font-size:14px">Copied ${lowerIdent} to clipboard</span>`;
-          setTimeout(() => { if (tooltip && tooltip.innerHTML.includes("Copied")) tooltip.innerHTML = orig; }, 1500);
+          tooltip.style.display = "block";
+          setTimeout(() => { _copiedUntil = 0; }, COPY_DURATION);
         }
       }).catch(err => logMsg("[WPT] clipboard auto-copy failed", true));
     }
@@ -375,6 +389,9 @@
       `;
       document.body.appendChild(tooltip);
     }
+
+    // Don't overwrite the "Copied" message while it's still showing
+    if (Date.now() < _copiedUntil) return;
 
     const fix = getFixNearMouse(e);
     if (fix) {
@@ -663,7 +680,32 @@
 
 
 
-  setTimeout(init, 1500);
+  // ── Load persisted settings before first render ───────────────────────────
+  // Request saved toggle states from the background service worker so that
+  // Settings are restored immediately after a browser/machine restart.
+  async function loadPersistedSettings() {
+    try {
+      const saved = await bgRequest({ type: "GET_SETTINGS" });
+      if (saved) {
+        if (saved.enabled       !== undefined) Settings.enabled       = saved.enabled;
+        if (saved.showFixes     !== undefined) Settings.showFixes     = saved.showFixes;
+        if (saved.showIntersects!== undefined) Settings.showIntersects= saved.showIntersects;
+        if (saved.showVors      !== undefined) Settings.showVors      = saved.showVors;
+        if (saved.showNdbs      !== undefined) Settings.showNdbs      = saved.showNdbs;
+        logMsg("[WPT] Persisted settings restored: " + JSON.stringify(Settings));
+      }
+    } catch (e) {
+      logMsg("[WPT] Could not restore settings, using defaults: " + String(e));
+    }
+  }
+
+  // Wait for the bridge to be ready, load settings, then start map init
+  async function startWithSettings() {
+    await loadPersistedSettings();
+    setTimeout(init, 1500);
+  }
+
+  startWithSettings();
 
   // Expose for popup commands
   window.__wptOverlay = { getSettings: () => ({...Settings}), reload: loadFixesForView };
