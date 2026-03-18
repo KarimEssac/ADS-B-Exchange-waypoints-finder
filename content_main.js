@@ -363,10 +363,10 @@
   function onClick(e) {
     const fix = getFixNearMouse(e);
     if (fix) {
-      const lowerIdent = fix.ident.toLowerCase();
+      const lowerIdent = (fix.name || fix.ident).toLowerCase();
       navigator.clipboard.writeText(lowerIdent).then(() => {
         if (tooltip) {
-          const COPY_DURATION = 2000; // ms to keep "Copied" visible
+          const COPY_DURATION = 1000; // ms to keep "Copied" visible
           _copiedUntil = Date.now() + COPY_DURATION;
           tooltip.innerHTML = `<span style="color:#3fb950;font-weight:bold;font-size:14px">Copied ${lowerIdent} to clipboard</span>`;
           tooltip.style.display = "block";
