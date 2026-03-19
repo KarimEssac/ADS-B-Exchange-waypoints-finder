@@ -165,21 +165,39 @@
 
     canvas = document.createElement("canvas");
     canvas.id = "wpt-overlay-canvas";
+    // Removing z-index completely. By appending to baseLayer without a z-index,
+    // it will naturally render above the base map's canvas (due to DOM order)
+    // but strictly beneath any subsequent OpenLayers layers (like flights) 
+    // because it shares the base map's stacking context.
     canvas.style.cssText = `
       position: absolute;
       top: 0; left: 0;
       width: 100%; height: 100%;
       pointer-events: none;
     `;
-    
-    // Insert behind UI controls rather than on top of everything
-    const uiContainer = container.querySelector('.ol-overlaycontainer');
-    if (uiContainer) {
-      container.insertBefore(canvas, uiContainer);
-    } else {
-      container.appendChild(canvas);
-    }
     ctx = canvas.getContext("2d");
+
+    // OpenLayers strictly manages its container and creates separate stacking contexts for each map layer.
+    // To cleanly sit between the map and the airplanes without being deleted by OpenLayers' renderer,
+    // we inject our canvas directly into the *first* layer container (the base map).
+    // This way, we render above the base map tile canvas, but strictly below the airplane vector layers.
+    setInterval(() => {
+      if (!canvas) return;
+      const layersContainer = container.querySelector('.ol-layers');
+      if (layersContainer && layersContainer.children.length > 0) {
+        // children[0] is usually the base map .ol-layer
+        const baseLayer = layersContainer.children[0];
+        if (canvas.parentElement !== baseLayer) {
+          baseLayer.appendChild(canvas);
+        }
+      } else {
+        // Fallback if structure is unexpected
+        const uiContainer = container.querySelector('.ol-overlaycontainer');
+        if (uiContainer && canvas.parentElement !== container) {
+          container.insertBefore(canvas, uiContainer);
+        }
+      }
+    }, 500);
 
     function syncSize() {
       if (!canvas) return;
@@ -250,8 +268,17 @@
     if (zoom < 6) return;
 
     const dpr = window.devicePixelRatio || 1;
-    const showLabels = zoom >= 10;
-    const r = (zoom >= 12 ? 6 : zoom >= 10 ? 5 : zoom >= 8 ? 4 : 3) * dpr;
+    const showLabels = zoom >= 10.5;
+    
+    // Scale radius down when zoomed out. Max size reached at zoom >= 10.5.
+    let baseRadius = 5; // default max radius
+    if (zoom >= 10.5) baseRadius = 5;
+    else if (zoom >= 9.5) baseRadius = 4;
+    else if (zoom >= 8.5) baseRadius = 3;
+    else if (zoom >= 7.5) baseRadius = 2;
+    else baseRadius = 1.5;
+    
+    const r = baseRadius * dpr;
 
     let drawn = 0;
     try {
@@ -353,6 +380,12 @@
   function getFixNearMouse(e) {
     const container = canvas ? canvas.parentElement : null;
     if (!container) return null;
+
+    // Yield priority to flights: tar1090 sets pointer cursor on the viewport
+    // or internal canvas when hovering over an aircraft. If a flight is hovered, ignore waypoints.
+    if (container.style.cursor === 'pointer') return null;
+    if (e.target && window.getComputedStyle(e.target).cursor === 'pointer') return null;
+
     const rect = container.getBoundingClientRect();
     const dpr = window.devicePixelRatio || 1;
     const mx = (e.clientX - rect.left) * dpr;
