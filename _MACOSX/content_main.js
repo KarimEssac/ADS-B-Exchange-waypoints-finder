@@ -18,6 +18,7 @@
     showVors:  true,
     showNdbs:  true,
     enabled:   true,
+    opacity:   0.92,
   };
 
   // ── State ─────────────────────────────────────────────────────────────────
@@ -63,6 +64,22 @@
       const { resolve, reject } = _pending.get(id);
       _pending.delete(id);
       msg.error ? reject(new Error(msg.error)) : resolve(msg);
+    }
+  });
+
+  window.addEventListener("keydown", (e) => {
+    // Only trigger if not typing in an input
+    const tag = e.target.tagName;
+    if (tag === "INPUT" || tag === "TEXTAREA" || e.target.isContentEditable) return;
+    
+    if (e.shiftKey && e.key.toLowerCase() === 's') {
+      Settings.enabled = !Settings.enabled;
+      // Notify background to save the new setting
+      bgRequest({ type: "SET_SETTINGS", settings: { enabled: Settings.enabled } }).catch(() => {});
+      
+      // Update the page map
+      lastBbox = null;
+      loadFixesForView();
     }
   });
 
@@ -233,7 +250,7 @@
     if (zoom < 6) return;
 
     const dpr = window.devicePixelRatio || 1;
-    const showLabels = zoom >= 8.5;
+    const showLabels = zoom >= 10;
     const r = (zoom >= 12 ? 6 : zoom >= 10 ? 5 : zoom >= 8 ? 4 : 3) * dpr;
 
     let drawn = 0;
@@ -278,7 +295,7 @@
         ctx.fillStyle = color;
         ctx.strokeStyle = "rgba(0,0,0,0.75)";
         ctx.lineWidth = 1 * dpr;
-        ctx.globalAlpha = 0.92;
+        ctx.globalAlpha = Settings.opacity;
         drawShape(fix.type, x, y, r);
         ctx.fill();
         ctx.stroke();
@@ -288,7 +305,7 @@
         if (showLabels) {
           const fs = (zoom >= 11 ? 11 : 10) * dpr;
           ctx.font = `bold ${fs}px monospace`;
-          ctx.globalAlpha = 1;
+          ctx.globalAlpha = Settings.opacity;
           ctx.lineWidth = 3 * dpr;
           ctx.strokeStyle = "rgba(0,0,0,0.9)";
           const label = fix.name ? `${fix.ident} (${fix.name})` : fix.ident;
@@ -692,6 +709,7 @@
         if (saved.showIntersects!== undefined) Settings.showIntersects= saved.showIntersects;
         if (saved.showVors      !== undefined) Settings.showVors      = saved.showVors;
         if (saved.showNdbs      !== undefined) Settings.showNdbs      = saved.showNdbs;
+        if (saved.opacity       !== undefined) Settings.opacity       = saved.opacity;
         logMsg("[WPT] Persisted settings restored: " + JSON.stringify(Settings));
       }
     } catch (e) {
@@ -699,9 +717,45 @@
     }
   }
 
+  function createQuickAccessButton() {
+    const btn = document.createElement("div");
+    btn.innerText = "ADSB Waypoints Settings";
+    btn.style.position = "fixed";
+    btn.style.top = "10px";
+    btn.style.right = "10px";
+    btn.style.zIndex = "999999";
+    btn.style.background = "#1f6feb";
+    btn.style.color = "#ffffff";
+    btn.style.padding = "10px 16px";
+    btn.style.borderRadius = "8px";
+    btn.style.border = "1px solid #58a6ff";
+    btn.style.cursor = "pointer";
+    btn.style.fontFamily = "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+    btn.style.fontSize = "14px";
+    btn.style.fontWeight = "bold";
+    btn.style.boxShadow = "0 4px 12px rgba(0,0,0,0.6)";
+    btn.style.transition = "background 0.2s, transform 0.1s";
+    
+    btn.addEventListener("mouseover", () => {
+      btn.style.background = "#388bfd";
+      btn.style.transform = "scale(1.02)";
+    });
+    btn.addEventListener("mouseout", () => {
+      btn.style.background = "#1f6feb";
+      btn.style.transform = "scale(1)";
+    });
+    
+    btn.addEventListener("click", () => {
+      bgRequest({ type: "OPEN_POPUP" }).catch(e => logMsg("Failed to open popup: " + e, true));
+    });
+  
+    document.body.appendChild(btn);
+  }
+
   // Wait for the bridge to be ready, load settings, then start map init
   async function startWithSettings() {
     await loadPersistedSettings();
+    createQuickAccessButton();
     setTimeout(init, 1500);
   }
 

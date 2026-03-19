@@ -258,7 +258,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
   if (msg.type === "GET_SETTINGS") {
     chrome.storage.local.get(
-      ["wpt_enabled", "wpt_showFixes", "wpt_showIntersects", "wpt_showVors", "wpt_showNdbs"],
+      ["wpt_enabled", "wpt_showFixes", "wpt_showIntersects", "wpt_showVors", "wpt_showNdbs", "wpt_opacity"],
       (data) => {
         sendResponse({
           enabled:       data.wpt_enabled       !== undefined ? data.wpt_enabled       : true,
@@ -266,10 +266,31 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           showIntersects:data.wpt_showIntersects !== undefined ? data.wpt_showIntersects: true,
           showVors:      data.wpt_showVors       !== undefined ? data.wpt_showVors      : true,
           showNdbs:      data.wpt_showNdbs       !== undefined ? data.wpt_showNdbs      : true,
+          opacity:       data.wpt_opacity        !== undefined ? data.wpt_opacity       : 0.92,
         });
       }
     );
     return true; // async response
+  }
+
+  if (msg.type === "SET_SETTINGS") {
+    const updates = {};
+    if (msg.settings.enabled !== undefined) updates.wpt_enabled = msg.settings.enabled;
+    if (msg.settings.opacity !== undefined) updates.wpt_opacity = msg.settings.opacity;
+    chrome.storage.local.set(updates, () => sendResponse({ ok: true }));
+    return true;
+  }
+
+  if (msg.type === "OPEN_POPUP") {
+    if (chrome.action && chrome.action.openPopup) {
+      chrome.action.openPopup().then(() => sendResponse({ ok: true })).catch(err => {
+        console.error("[WPT] Could not open popup:", err);
+        sendResponse({ ok: false, error: String(err) });
+      });
+    } else {
+      sendResponse({ ok: false, error: "openPopup not supported" });
+    }
+    return true;
   }
 
   if (msg.type === "GET_STATUS") {
