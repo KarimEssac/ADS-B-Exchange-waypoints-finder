@@ -3,6 +3,7 @@
 const statusDot  = document.getElementById("statusDot");
 const statusText = document.getElementById("statusText");
 const togEnabled = document.getElementById("togEnabled");
+const togOpacity = document.getElementById("togOpacity");
 const subToggles = document.getElementById("subToggles");
 const togFixes   = document.getElementById("togFixes");
 const togIntersects = document.getElementById("togIntersects");
@@ -52,7 +53,7 @@ async function checkStatus() {
 checkStatus();
 
 // ── Restore saved toggle states ───────────────────────────────────────────────
-chrome.storage.local.get(["wpt_enabled", "wpt_showFixes", "wpt_showIntersects", "wpt_showVors", "wpt_showNdbs"], (data) => {
+chrome.storage.local.get(["wpt_enabled", "wpt_showFixes", "wpt_showIntersects", "wpt_showVors", "wpt_showNdbs", "wpt_opacity"], (data) => {
   if (data.wpt_enabled !== undefined) {
     togEnabled.checked = data.wpt_enabled;
     updateSubTogglesVisuals(data.wpt_enabled);
@@ -61,6 +62,19 @@ chrome.storage.local.get(["wpt_enabled", "wpt_showFixes", "wpt_showIntersects", 
   if (data.wpt_showIntersects !== undefined) togIntersects.checked = data.wpt_showIntersects;
   if (data.wpt_showVors  !== undefined) togVors.checked  = data.wpt_showVors;
   if (data.wpt_showNdbs  !== undefined) togNdbs.checked  = data.wpt_showNdbs;
+  if (data.wpt_opacity   !== undefined) togOpacity.value = data.wpt_opacity;
+});
+
+chrome.storage.onChanged.addListener((changes, namespace) => {
+  if (namespace === "local") {
+    if (changes.wpt_enabled !== undefined) {
+      togEnabled.checked = changes.wpt_enabled.newValue;
+      updateSubTogglesVisuals(changes.wpt_enabled.newValue);
+    }
+    if (changes.wpt_opacity !== undefined) {
+      togOpacity.value = changes.wpt_opacity.newValue;
+    }
+  }
 });
 
 function updateSubTogglesVisuals(isEnabled) {
@@ -87,10 +101,21 @@ async function sendToggle(key, value) {
   }
 }
 
+document.addEventListener("keydown", (e) => {
+  const tag = e.target.tagName;
+  if (tag === "INPUT" || tag === "TEXTAREA" || e.target.isContentEditable) return;
+  
+  if (e.shiftKey && e.key.toLowerCase() === 's') {
+    togEnabled.checked = !togEnabled.checked;
+    togEnabled.dispatchEvent(new Event("change"));
+  }
+});
+
 togEnabled.addEventListener("change", () => {
   sendToggle("enabled", togEnabled.checked);
   updateSubTogglesVisuals(togEnabled.checked);
 });
+togOpacity.addEventListener("input", () => sendToggle("opacity", parseFloat(togOpacity.value)));
 togFixes.addEventListener("change", () => sendToggle("showFixes", togFixes.checked));
 togIntersects.addEventListener("change", () => sendToggle("showIntersects", togIntersects.checked));
 togVors.addEventListener("change",  () => sendToggle("showVors",  togVors.checked));
