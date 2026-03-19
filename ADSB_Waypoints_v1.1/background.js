@@ -366,7 +366,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         return matrix[b.length][a.length];
       }
 
-      const maxDist = Math.max(1, Math.floor(qs.length / 2) + (qs.length > 4 ? 1 : 0));
+      const maxDist = Math.max(2, Math.floor(qs.length / 2));
 
       // If a bounding box was supplied, pre-build a fast lookup set of in-bbox idents
       const bboxFilter = msg.bbox || null;
