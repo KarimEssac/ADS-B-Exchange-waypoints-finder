@@ -352,14 +352,14 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
         for (let i = 1; i <= b.length; i++) {
           for (let j = 1; j <= a.length; j++) {
-            if (b.charAt(i - 1) === a.charAt(j - 1)) {
-              matrix[i][j] = matrix[i - 1][j - 1];
-            } else {
-              matrix[i][j] = Math.min(
-                matrix[i - 1][j - 1] + 1,
-                matrix[i][j - 1] + 1,
-                matrix[i - 1][j] + 1
-              );
+            let cost = b.charAt(i - 1) === a.charAt(j - 1) ? 0 : 1;
+            matrix[i][j] = Math.min(
+              matrix[i - 1][j - 1] + cost,
+              matrix[i][j - 1] + 1,
+              matrix[i - 1][j] + 1
+            );
+            if (i > 1 && j > 1 && b.charAt(i - 1) === a.charAt(j - 2) && b.charAt(i - 2) === a.charAt(j - 1)) {
+              matrix[i][j] = Math.min(matrix[i][j], matrix[i - 2][j - 2] + cost);
             }
           }
         }
@@ -372,30 +372,35 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       const bboxFilter = msg.bbox || null;
 
       for (const f of FIXES) {
-        if (f.type === "intersect") continue; // intersections are not searchable
         if (bboxFilter) {
           const { minLat, maxLat, minLon, maxLon } = bboxFilter;
           if (f.lat < minLat || f.lat > maxLat || f.lon < minLon || f.lon > maxLon) continue;
         }
         const id = f.ident.toLowerCase();
         let score = 0;
-        
-        let dist = lev(id, qs);
+        let dist = 999;
         
         // 1. Check ident
         if (id === qs) score = 100;
         else if (id.startsWith(qs)) score = 80;
         else if (id.includes(qs)) score = 60;
-        else if (dist <= maxDist) score = 40 - (dist * 5); // 1 dist = 35, 2 dist = 30
+        else if (Math.abs(id.length - qs.length) <= maxDist) {
+          dist = lev(id, qs);
+          if (dist <= maxDist) score = 40 - (dist * 5); // 1 dist = 35, 2 dist = 30
+        }
 
         // 2. Check name (if it exists)
         if (f.name) {
           const nm = f.name.toLowerCase();
-          let nDist = lev(nm, qs);
+          let nDist = 999;
           if (nm === qs) score = Math.max(score, 90);
           else if (nm.startsWith(qs)) score = Math.max(score, 70);
           else if (nm.includes(qs)) score = Math.max(score, 50);
-          else if (nDist <= maxDist) score = Math.max(score, 30 - (nDist * 5));
+          else if (Math.abs(nm.length - qs.length) <= maxDist) {
+            nDist = lev(nm, qs);
+            if (nDist <= maxDist) score = Math.max(score, 30 - (nDist * 5));
+          }
+          dist = Math.min(dist, nDist);
         }
 
         if (score > 0) {
