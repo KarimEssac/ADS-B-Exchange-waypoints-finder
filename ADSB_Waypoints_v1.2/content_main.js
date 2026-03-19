@@ -385,7 +385,8 @@
         if (tooltip) {
           const COPY_DURATION = 1000; // ms to keep "Copied" visible
           _copiedUntil = Date.now() + COPY_DURATION;
-          tooltip.innerHTML = `<span style="color:#3fb950;font-weight:bold;font-size:14px">Copied ${lowerIdent} to clipboard</span>`;
+          const color = COLOR[fix.type] || "#3fb950";
+          tooltip.innerHTML = `<span style="color:${color};font-weight:bold;font-size:14px">Copied ${lowerIdent} to clipboard</span>`;
           tooltip.style.display = "block";
           setTimeout(() => { _copiedUntil = 0; }, COPY_DURATION);
         }
@@ -721,8 +722,22 @@
     const btn = document.createElement("div");
     btn.innerText = "ADSB Waypoints Settings";
     btn.style.position = "fixed";
-    btn.style.top = "10px";
-    btn.style.right = "10px";
+    
+    // Restore saved position or use default
+    let savedPos = null;
+    try {
+      const posStr = localStorage.getItem("wpt_btn_pos");
+      if (posStr) savedPos = JSON.parse(posStr);
+    } catch(e) {}
+    
+    if (savedPos && savedPos.top !== undefined && savedPos.left !== undefined) {
+      btn.style.top = savedPos.top + "px";
+      btn.style.left = savedPos.left + "px";
+    } else {
+      btn.style.top = "10px";
+      btn.style.right = "10px";
+    }
+
     btn.style.zIndex = "999999";
     btn.style.background = "#1f6feb";
     btn.style.color = "#ffffff";
@@ -734,18 +749,67 @@
     btn.style.fontSize = "14px";
     btn.style.fontWeight = "bold";
     btn.style.boxShadow = "0 4px 12px rgba(0,0,0,0.6)";
-    btn.style.transition = "background 0.2s, transform 0.1s";
+    btn.style.transition = "background 0.2s";
+    btn.style.userSelect = "none";
     
     btn.addEventListener("mouseover", () => {
       btn.style.background = "#388bfd";
-      btn.style.transform = "scale(1.02)";
     });
     btn.addEventListener("mouseout", () => {
       btn.style.background = "#1f6feb";
-      btn.style.transform = "scale(1)";
+    });
+
+    let isDragging = false;
+    let hasMoved = false;
+    let startX = 0, startY = 0;
+    let startLeft = 0, startTop = 0;
+
+    btn.addEventListener("mousedown", (e) => {
+      if (e.button !== 0) return; // Only left click
+      isDragging = true;
+      hasMoved = false;
+      startX = e.clientX;
+      startY = e.clientY;
+      const rect = btn.getBoundingClientRect();
+      startLeft = rect.left;
+      startTop = rect.top;
+      
+      btn.style.transition = "none"; // Disable transition during drag
+      btn.style.right = "auto";
+      btn.style.left = startLeft + "px";
+      btn.style.top = startTop + "px";
+      
+      e.preventDefault(); // Prevent text selection
+    });
+
+    window.addEventListener("mousemove", (e) => {
+      if (!isDragging) return;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      
+      // Small threshold to distinguish click from drag
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) hasMoved = true;
+      
+      if (hasMoved) {
+        btn.style.left = (startLeft + dx) + "px";
+        btn.style.top = (startTop + dy) + "px";
+      }
+    });
+
+    window.addEventListener("mouseup", (e) => {
+      if (!isDragging) return;
+      isDragging = false;
+      btn.style.transition = "background 0.2s"; // Restore transition
+      if (hasMoved) {
+        try {
+          const rect = btn.getBoundingClientRect();
+          localStorage.setItem("wpt_btn_pos", JSON.stringify({ left: rect.left, top: rect.top }));
+        } catch(err) {}
+      }
     });
     
     btn.addEventListener("click", () => {
+      if (hasMoved) return; // Ignore click if dragging occurred
       bgRequest({ type: "OPEN_POPUP" }).catch(e => logMsg("Failed to open popup: " + e, true));
     });
   
