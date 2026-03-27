@@ -19,6 +19,8 @@
     showNdbs:  true,
     enabled:   true,
     opacity:   0.92,
+    showBtn:   true,
+    labelSize: 1.0,
   };
 
   // ── State ─────────────────────────────────────────────────────────────────
@@ -40,6 +42,14 @@
 
     if (msg.type === "WPT_TOGGLE") {
       Settings[msg.key] = msg.value;
+      // Handle quick-access button visibility
+      if (msg.key === "showBtn") {
+        const btn = document.getElementById("wpt-quick-access-btn");
+        if (btn) btn.style.display = msg.value ? "" : "none";
+        return;
+      }
+      // Label size only affects rendering, no data reload needed
+      if (msg.key === "labelSize") return;
       lastBbox = null;  // Force re-fetch with new type filters
       loadFixesForView();
       return;
@@ -211,7 +221,12 @@
 
     // Tooltip detection — listen on the container without blocking map interactions
     container.addEventListener("mousemove", onMouseMove, { passive: true });
-    container.addEventListener("click", onClick, { passive: true });
+    // Use capture phase so we intercept clicks on waypoints BEFORE ADS-B's handlers.
+    // OpenLayers uses pointerdown/mousedown for map interactions (flight select/deselect),
+    // so we must block those too when the cursor is over a waypoint.
+    container.addEventListener("click", onClick, { capture: true });
+    container.addEventListener("pointerdown", onPointerBlock, { capture: true });
+    container.addEventListener("mousedown", onPointerBlock, { capture: true });
 
     logMsg("[WPT] Overlay canvas ready: " + canvas.width + "x" + canvas.height);
   }
@@ -268,7 +283,7 @@
     if (zoom < 6) return;
 
     const dpr = window.devicePixelRatio || 1;
-    const showLabels = zoom >= 10.5;
+    const showLabels = zoom >= 10;
     
     // Scale radius down when zoomed out. Max size reached at zoom >= 10.5.
     let baseRadius = 5; // default max radius
@@ -330,7 +345,7 @@
         let labelHit = null;
 
         if (showLabels) {
-          const fs = (zoom >= 11 ? 11 : 10) * dpr;
+          const fs = (zoom >= 11 ? 11 : 10) * dpr * Settings.labelSize;
           ctx.font = `bold ${fs}px monospace`;
           ctx.globalAlpha = Settings.opacity;
           ctx.lineWidth = 3 * dpr;
@@ -410,13 +425,28 @@
 
   let _copiedUntil = 0; // timestamp — tooltip is locked while Date.now() < _copiedUntil
 
+  // Block pointer/mouse-down events from reaching ADS-B when over a waypoint
+  function onPointerBlock(e) {
+    const fix = getFixNearMouse(e);
+    if (fix) {
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      e.preventDefault();
+    }
+  }
+
   function onClick(e) {
     const fix = getFixNearMouse(e);
     if (fix) {
+      // Stop the click from reaching ADS-B's handlers (preserves flight tracking)
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      e.preventDefault();
+
       const lowerIdent = (fix.name || fix.ident).toLowerCase();
       navigator.clipboard.writeText(lowerIdent).then(() => {
         if (tooltip) {
-          const COPY_DURATION = 1000; // ms to keep "Copied" visible
+          const COPY_DURATION = 400; // ms to keep "Copied" visible
           _copiedUntil = Date.now() + COPY_DURATION;
           const color = COLOR[fix.type] || "#3fb950";
           tooltip.innerHTML = `<span style="color:${color};font-weight:bold;font-size:14px">Copied ${lowerIdent} to clipboard</span>`;
@@ -447,11 +477,8 @@
     const fix = getFixNearMouse(e);
     if (fix) {
       const color = COLOR[fix.type] || "#fff";
-      const typeStr = { vor:"VOR / Navaid", ndb:"NDB", airport:"Airport Fix", intersect:"Intersection", fix:"Waypoint" }[fix.type] || "Fix";
-      const nameStr = fix.name ? ` <span style="font-weight:normal;font-size:13px;color:#aaa;">(${fix.name})</span>` : "";
-      tooltip.innerHTML = `<span style="font-size:15px;font-weight:bold;color:${color}">${fix.ident}${nameStr}</span>
-<span style="color:#8b949e;font-size:11px;display:block">${typeStr}</span>
-<span style="color:#aaa;font-size:11px;display:block">${fix.lat.toFixed(5)}&nbsp;&nbsp;${fix.lon.toFixed(5)}°</span>`;
+      const label = fix.name ? `${fix.ident} (${fix.name})` : fix.ident;
+      tooltip.innerHTML = `<span style="font-size:15px;font-weight:bold;color:${color}">${label}</span>`;
       tooltip.style.display = "block";
       tooltip.style.left = (e.clientX + 16) + "px";
       tooltip.style.top  = (e.clientY - 8) + "px";
@@ -744,6 +771,8 @@
         if (saved.showVors      !== undefined) Settings.showVors      = saved.showVors;
         if (saved.showNdbs      !== undefined) Settings.showNdbs      = saved.showNdbs;
         if (saved.opacity       !== undefined) Settings.opacity       = saved.opacity;
+        if (saved.showBtn      !== undefined) Settings.showBtn      = saved.showBtn;
+        if (saved.labelSize    !== undefined) Settings.labelSize    = saved.labelSize;
         logMsg("[WPT] Persisted settings restored: " + JSON.stringify(Settings));
       }
     } catch (e) {
@@ -753,6 +782,7 @@
 
   function createQuickAccessButton() {
     const btn = document.createElement("div");
+    btn.id = "wpt-quick-access-btn";
     btn.innerText = "ADSB Waypoints Settings";
     btn.style.position = "fixed";
     
@@ -847,6 +877,9 @@
     });
   
     document.body.appendChild(btn);
+
+    // Apply persisted showBtn visibility
+    if (!Settings.showBtn) btn.style.display = "none";
   }
 
   // Wait for the bridge to be ready, load settings, then start map init

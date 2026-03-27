@@ -11,6 +11,9 @@ const togVors    = document.getElementById("togVors");
 const togNdbs    = document.getElementById("togNdbs");
 const searchBox  = document.getElementById("searchBox");
 const searchResults = document.getElementById("searchResults");
+const togShowBtn = document.getElementById("togShowBtn");
+const togLabelSize = document.getElementById("togLabelSize");
+const btnLabelDefault = document.getElementById("btnLabelDefault");
 
 // ── Ensure content scripts are injected ──────────────────────────────────────
 async function ensureContentScripts(tabId) {
@@ -53,7 +56,7 @@ async function checkStatus() {
 checkStatus();
 
 // ── Restore saved toggle states ───────────────────────────────────────────────
-chrome.storage.local.get(["wpt_enabled", "wpt_showFixes", "wpt_showIntersects", "wpt_showVors", "wpt_showNdbs", "wpt_opacity"], (data) => {
+chrome.storage.local.get(["wpt_enabled", "wpt_showFixes", "wpt_showIntersects", "wpt_showVors", "wpt_showNdbs", "wpt_opacity", "wpt_showBtn", "wpt_labelSize"], (data) => {
   if (data.wpt_enabled !== undefined) {
     togEnabled.checked = data.wpt_enabled;
     updateSubTogglesVisuals(data.wpt_enabled);
@@ -63,6 +66,8 @@ chrome.storage.local.get(["wpt_enabled", "wpt_showFixes", "wpt_showIntersects", 
   if (data.wpt_showVors  !== undefined) togVors.checked  = data.wpt_showVors;
   if (data.wpt_showNdbs  !== undefined) togNdbs.checked  = data.wpt_showNdbs;
   if (data.wpt_opacity   !== undefined) togOpacity.value = data.wpt_opacity;
+  if (data.wpt_showBtn !== undefined) togShowBtn.checked = data.wpt_showBtn;
+  if (data.wpt_labelSize !== undefined) togLabelSize.value = data.wpt_labelSize;
 });
 
 chrome.storage.onChanged.addListener((changes, namespace) => {
@@ -120,6 +125,12 @@ togFixes.addEventListener("change", () => sendToggle("showFixes", togFixes.check
 togIntersects.addEventListener("change", () => sendToggle("showIntersects", togIntersects.checked));
 togVors.addEventListener("change",  () => sendToggle("showVors",  togVors.checked));
 togNdbs.addEventListener("change",  () => sendToggle("showNdbs",  togNdbs.checked));
+togShowBtn.addEventListener("change", () => sendToggle("showBtn", togShowBtn.checked));
+togLabelSize.addEventListener("input", () => sendToggle("labelSize", parseFloat(togLabelSize.value)));
+btnLabelDefault.addEventListener("click", () => {
+  togLabelSize.value = 1.0;
+  sendToggle("labelSize", 1.0);
+});
 
 const togAreaSearch = document.getElementById("togAreaSearch");
 const areaSearchDot   = document.getElementById("areaSearchDot");
@@ -132,7 +143,7 @@ function updateAreaToggleVisuals(isAreaMode) {
     areaSearchLabel.style.color      = "#58a6ff";
   } else {
     areaSearchDot.style.background   = "#3fb950";
-    areaSearchLabel.textContent      = "All USA";
+    areaSearchLabel.textContent      = "All Available";
     areaSearchLabel.style.color      = "#e6edf3";
   }
 }
@@ -173,26 +184,32 @@ let _searchTimer = null;
 searchBox.addEventListener("input", () => {
   clearTimeout(_searchTimer);
   const q = searchBox.value.trim();
-  if (!q) { searchResults.innerHTML = ""; return; }
+  // Persist search query so it survives popup close/reopen
+  chrome.storage.local.set({ wpt_lastSearch: q });
+  if (!q) {
+    searchResults.innerHTML = "";
+    document.body.classList.remove("searching");
+    return;
+  }
+  document.body.classList.add("searching");
   _searchTimer = setTimeout(() => doSearch(q), 250);
 });
 
 async function doSearch(q) {
   searchResults.innerHTML = `<div class="no-results">Searching…</div>`;
   try {
-    const [res, bbox] = await Promise.all([
-      chrome.runtime.sendMessage({ type: "SEARCH_FIX", query: q.toUpperCase() }),
-      togAreaSearch.checked ? getMapBbox() : Promise.resolve(null)
-    ]);
+    // In Current View mode, get bbox first and send it to the background
+    // so the search only scores fixes within the visible map area
+    const searchMsg = { type: "SEARCH_FIX", query: q.toUpperCase() };
 
-    let fixes = res.fixes || [];
-
-    if (togAreaSearch.checked && bbox) {
-      fixes = fixes.filter(f =>
-        f.lat >= bbox.minLat && f.lat <= bbox.maxLat &&
-        f.lon >= bbox.minLon && f.lon <= bbox.maxLon
-      );
+    if (togAreaSearch.checked) {
+      const bbox = await getMapBbox();
+      if (bbox) searchMsg.bbox = bbox;
     }
+
+    const res = await chrome.runtime.sendMessage(searchMsg);
+    // Filter out intersections (white dots) from search results
+    const fixes = (res.fixes || []).filter(f => f.type !== "intersect");
 
     renderResults(fixes);
   } catch (e) {
@@ -250,3 +267,13 @@ function typeColor(t) {
 function typeLabel(t) {
   return t === "vor" ? "VOR" : t === "ndb" ? "NDB" : t === "airport" ? "APT" : t === "intersect" ? "INT" : "FIX";
 }
+
+// ── Restore last search on popup reopen ───────────────────────────────────────
+chrome.storage.local.get("wpt_lastSearch", (data) => {
+  const lastQ = data.wpt_lastSearch || "";
+  if (lastQ) {
+    searchBox.value = lastQ;
+    document.body.classList.add("searching");
+    doSearch(lastQ);
+  }
+});

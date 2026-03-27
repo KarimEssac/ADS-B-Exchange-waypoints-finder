@@ -1,8 +1,8 @@
 // background.js — ADSB Waypoints Extension
-// Loads cifp.zip, parses all US fixes/waypoints, serves them to the content script
+// Loads cifp.zip, parses all fixes/waypoints worldwide, serves them to the content script
 // Uses IndexedDB to cache parsed data across service worker restarts (MV3)
 
-importScripts("fflate.js");
+importScripts("fflate.js", "sound_map.js");
 
 // ─── State ────────────────────────────────────────────────────────────────────
 let FIXES = [];          // [{ident, lat, lon, type}]
@@ -12,7 +12,7 @@ let LOADING = false;     // prevent double-loading
 // ─── IndexedDB caching ────────────────────────────────────────────────────────
 const DB_NAME = "AdsbWptCache";
 const STORE_NAME = "fixes";
-const CACHE_VERSION = 10; // Bumped: added airport ICAO field for P-section fixes
+const CACHE_VERSION = 11; // Bumped: worldwide data — removed US-only filters
 
 function openDb() {
   return new Promise((resolve, reject) => {
@@ -160,8 +160,8 @@ function parseCifp(text) {
   let count = 0;
 
   for (const line of lines) {
-    // Only process US records (SUS = USA, SPA = Pacific/Hawaii)
-    if (!line.startsWith("SUS") && !line.startsWith("SPA")) continue;
+    // Process all CIFP records (S prefix = standard record)
+    if (!line.startsWith("S")) continue;
 
     const coordMatch = line.match(/[NS]\d{8}[EW]\d{9}/);
     if (!coordMatch) continue;
@@ -177,9 +177,9 @@ function parseCifp(text) {
     try {
       const { lat, lon } = parseCifpLatLon(coordMatch[0]);
 
-      // Bounds check — keep contiguous US + Alaska + Hawaii
-      if (lat < 15 || lat > 72) continue;
-      if (lon < -180 || lon > -60) continue;
+      // Basic sanity check — skip obviously invalid coordinates
+      if (lat < -90 || lat > 90) continue;
+      if (lon < -180 || lon > 180) continue;
 
       let type = lineType(line);
 
@@ -258,7 +258,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
   if (msg.type === "GET_SETTINGS") {
     chrome.storage.local.get(
-      ["wpt_enabled", "wpt_showFixes", "wpt_showIntersects", "wpt_showVors", "wpt_showNdbs", "wpt_opacity"],
+      ["wpt_enabled", "wpt_showFixes", "wpt_showIntersects", "wpt_showVors", "wpt_showNdbs", "wpt_opacity", "wpt_showBtn", "wpt_labelSize"],
       (data) => {
         sendResponse({
           enabled:       data.wpt_enabled       !== undefined ? data.wpt_enabled       : true,
@@ -267,6 +267,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           showVors:      data.wpt_showVors       !== undefined ? data.wpt_showVors      : true,
           showNdbs:      data.wpt_showNdbs       !== undefined ? data.wpt_showNdbs      : true,
           opacity:       data.wpt_opacity        !== undefined ? data.wpt_opacity       : 0.92,
+          showBtn:       data.wpt_showBtn         !== undefined ? data.wpt_showBtn        : true,
+          labelSize:     data.wpt_labelSize       !== undefined ? data.wpt_labelSize      : 1.0,
         });
       }
     );
@@ -277,6 +279,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     const updates = {};
     if (msg.settings.enabled !== undefined) updates.wpt_enabled = msg.settings.enabled;
     if (msg.settings.opacity !== undefined) updates.wpt_opacity = msg.settings.opacity;
+    if (msg.settings.showBtn !== undefined) updates.wpt_showBtn = msg.settings.showBtn;
+    if (msg.settings.labelSize !== undefined) updates.wpt_labelSize = msg.settings.labelSize;
     chrome.storage.local.set(updates, () => sendResponse({ ok: true }));
     return true;
   }
@@ -334,84 +338,137 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     return true;
   }
 
-  // Search for fixes by ident
+  // Search for fixes by ident — SandCat fuzzy search algorithm
   if (msg.type === "SEARCH_FIX") {
     const respond = () => {
       if (!READY) { sendResponse({ fixes: [] }); return; }
-      const q = (msg.query || "").trim();
+      const q = (msg.query || "").trim().toUpperCase();
       if (!q) { sendResponse({ fixes: [] }); return; }
-      
-      const qs = q.toLowerCase();
-      const scored = [];
 
-      function lev(a, b) {
-        if (a.length === 0) return b.length;
-        if (b.length === 0) return a.length;
+      // ── SandCat fuzzy search helpers ──
+
+      function phoneticNormalize(s) {
+        if (!s) return "";
+        s = s.toUpperCase().replace(/[^A-Z]/g, "");
+        const rules = [
+          [/PH/g,"F"], [/CK/g,"K"], [/Q/g,"K"], [/X/g,"KS"],
+          [/Z/g,"S"], [/DG/g,"J"], [/GH/g,"G"], [/KN/g,"N"], [/WR/g,"R"],
+          [/EE/g,"I"], [/EA/g,"I"], [/IE/g,"I"], [/EY/g,"I"], [/AY/g,"I"],
+          [/OO/g,"U"], [/OU/g,"U"],
+          [/ISN/g,"SN"], [/YSN/g,"SN"]
+        ];
+        for (const [r, rep] of rules) s = s.replace(r, rep);
+        s = s.replace(/Y/g, "I");
+        s = s.replace(/(.)\1+/g, "$1");
+        if (s.length > 1) s = s[0] + s.slice(1).replace(/[AEIOU]/g, "");
+        return s;
+      }
+
+      function fuzzy(str, pattern) {
+        let i = 0;
+        for (const c of str) {
+          if (c === pattern[i]) i++;
+          if (i === pattern.length) return true;
+        }
+        return false;
+      }
+
+      function levenshtein(a, b) {
         const matrix = [];
         for (let i = 0; i <= b.length; i++) matrix[i] = [i];
         for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
         for (let i = 1; i <= b.length; i++) {
           for (let j = 1; j <= a.length; j++) {
-            let cost = b.charAt(i - 1) === a.charAt(j - 1) ? 0 : 1;
-            matrix[i][j] = Math.min(
-              matrix[i - 1][j - 1] + cost,
-              matrix[i][j - 1] + 1,
-              matrix[i - 1][j] + 1
-            );
-            if (i > 1 && j > 1 && b.charAt(i - 1) === a.charAt(j - 2) && b.charAt(i - 2) === a.charAt(j - 1)) {
-              matrix[i][j] = Math.min(matrix[i][j], matrix[i - 2][j - 2] + cost);
+            if (b.charAt(i - 1) === a.charAt(j - 1)) {
+              matrix[i][j] = matrix[i - 1][j - 1];
+            } else {
+              matrix[i][j] = Math.min(
+                matrix[i - 1][j - 1] + 1,
+                matrix[i][j - 1] + 1,
+                matrix[i - 1][j] + 1
+              );
             }
           }
         }
         return matrix[b.length][a.length];
       }
 
-      const maxDist = Math.max(2, Math.floor(qs.length / 2));
+      // Strip ALL vowels for consonant-skeleton comparison
+      function consonantSkeleton(s) {
+        if (!s) return "";
+        return s.toUpperCase()
+          .replace(/[^A-Z]/g, "")
+          .replace(/[AEIOU]/g, "")
+          .replace(/PH/g, "F")
+          .replace(/CK/g, "K")
+          .replace(/Q/g, "K")
+          .replace(/Z/g, "S")
+          .replace(/(.)\1+/g, "$1");
+      }
 
-      // If a bounding box was supplied, pre-build a fast lookup set of in-bbox idents
+      function soundScore(fix, query) {
+        fix = String(fix || "").toUpperCase();
+        query = String(query || "").toUpperCase();
+        if (!fix || !query) return 0;
+        const fixPh = phoneticNormalize(fix);
+        const qPh = phoneticNormalize(query);
+        const fixSk = consonantSkeleton(fix);
+        const qSk = consonantSkeleton(query);
+        let score = 0;
+
+        // Position-aware sound similarity (EVANN/IVANN = ~90% → 270 pts)
+        const simScore = soundSimilarityScore(fix, query);
+        score += Math.round(simScore * 3);
+
+        // Phonetic equality (keeps first vowel)
+        if (fixPh === qPh) score += 200;
+        // Consonant skeleton equality (EVANN/IVANN both become VN)
+        if (fixSk === qSk && fixSk.length >= 2) score += 180;
+        // Phonetic containment
+        if (fixPh.includes(qPh) || qPh.includes(fixPh)) score += 120;
+        // Skeleton containment
+        if (fixSk.includes(qSk) || qSk.includes(fixSk)) score += 80;
+        // Literal exact
+        if (fix === query) score += 100;
+        // Literal prefix
+        if (fix.startsWith(query)) score += 80;
+        // Literal substring
+        if (fix.includes(query)) score += 50;
+        // Fuzzy subsequence
+        if (fuzzy(fix, query)) score += 40;
+        // Phonetic edit distance
+        const distPh = levenshtein(fixPh, qPh);
+        score += Math.max(0, 40 - distPh * 6);
+        // Raw edit distance — heavily weighted for close matches
+        const distRaw = levenshtein(fix, query);
+        if (distRaw <= 3) score += [300, 200, 120, 60][distRaw];
+
+        return score;
+      }
+
+      // ── Score all fixes ──
       const bboxFilter = msg.bbox || null;
+      const scored = [];
 
       for (const f of FIXES) {
         if (bboxFilter) {
           const { minLat, maxLat, minLon, maxLon } = bboxFilter;
           if (f.lat < minLat || f.lat > maxLat || f.lon < minLon || f.lon > maxLon) continue;
         }
-        const id = f.ident.toLowerCase();
-        let score = 0;
-        let dist = 999;
-        
-        // 1. Check ident
-        if (id === qs) score = 100;
-        else if (id.startsWith(qs)) score = 80;
-        else if (id.includes(qs)) score = 60;
-        else if (Math.abs(id.length - qs.length) <= maxDist) {
-          dist = lev(id, qs);
-          if (dist <= maxDist) score = 40 - (dist * 5); // 1 dist = 35, 2 dist = 30
-        }
-
-        // 2. Check name (if it exists)
+        let score = soundScore(f.ident, q);
         if (f.name) {
-          const nm = f.name.toLowerCase();
-          let nDist = 999;
-          if (nm === qs) score = Math.max(score, 90);
-          else if (nm.startsWith(qs)) score = Math.max(score, 70);
-          else if (nm.includes(qs)) score = Math.max(score, 50);
-          else if (Math.abs(nm.length - qs.length) <= maxDist) {
-            nDist = lev(nm, qs);
-            if (nDist <= maxDist) score = Math.max(score, 30 - (nDist * 5));
-          }
-          dist = Math.min(dist, nDist);
+          const nameScore = soundScore(f.name.replace(/[^A-Z]/g, ""), q);
+          score = Math.max(score, nameScore);
+          const nameUpper = f.name.toUpperCase();
+          if (nameUpper.includes(q)) score = Math.max(score, 90);
         }
-
         if (score > 0) {
-          scored.push({ fix: f, score, dist });
+          scored.push({ fix: f, score });
         }
       }
 
-      // Sort by score descending, then edit distance ascending, then alphabetically by ident
-      scored.sort((a, b) => b.score - a.score || a.dist - b.dist || a.fix.ident.localeCompare(b.fix.ident));
+      scored.sort((a, b) => b.score - a.score || a.fix.ident.localeCompare(b.fix.ident));
       const result = scored.slice(0, 30).map(s => s.fix);
-
       sendResponse({ fixes: result });
     };
 
