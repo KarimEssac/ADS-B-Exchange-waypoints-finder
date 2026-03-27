@@ -40,6 +40,20 @@
       }
     })();
   });
+  // ── POPUP LIFECYCLE: hide/show quick-access button ─────────────────────────
+  chrome.runtime.onConnect.addListener((port) => {
+    if (port.name !== "wpt_popup_alive") return;
+    // Popup opened — hide the button
+    window.postMessage({
+      __wpt_source: "bridge", type: "WPT_TOGGLE", key: "__hideQAB", value: true
+    }, "*");
+    port.onDisconnect.addListener(() => {
+      // Popup closed — show the button again
+      window.postMessage({
+        __wpt_source: "bridge", type: "WPT_TOGGLE", key: "__hideQAB", value: false
+      }, "*");
+    });
+  });
 
   // ── POPUP → PAGE: relay toggle / fly-to commands ──────────────────────────
   chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {

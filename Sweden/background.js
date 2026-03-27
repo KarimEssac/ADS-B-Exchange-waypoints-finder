@@ -291,6 +291,70 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     return true;
   }
 
+  // ── SandCat fuzzy search helpers (shared by SEARCH_AIRPORT & SEARCH_FIX) ──
+  function phoneticNormalize(s) {
+    if (!s) return "";
+    s = s.toUpperCase().replace(/[^A-Z]/g, "");
+    const rules = [
+      [/PH/g,"F"], [/CK/g,"K"], [/Q/g,"K"], [/X/g,"KS"],
+      [/Z/g,"S"], [/DG/g,"J"], [/GH/g,"G"], [/KN/g,"N"], [/WR/g,"R"],
+      [/EE/g,"I"], [/EA/g,"I"], [/IE/g,"I"], [/EY/g,"I"], [/AY/g,"I"],
+      [/OO/g,"U"], [/OU/g,"U"],
+      [/ISN/g,"SN"], [/YSN/g,"SN"]
+    ];
+    for (const [r, rep] of rules) s = s.replace(r, rep);
+    s = s.replace(/Y/g, "I");
+    s = s.replace(/(.)\1+/g, "$1");
+    if (s.length > 1) s = s[0] + s.slice(1).replace(/[AEIOU]/g, "");
+    return s;
+  }
+  function fuzzy(str, pattern) {
+    let i = 0;
+    for (const c of str) { if (c === pattern[i]) i++; if (i === pattern.length) return true; }
+    return false;
+  }
+  function levenshtein(a, b) {
+    const matrix = [];
+    for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+    for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+    for (let i = 1; i <= b.length; i++) {
+      for (let j = 1; j <= a.length; j++) {
+        if (b.charAt(i - 1) === a.charAt(j - 1)) matrix[i][j] = matrix[i - 1][j - 1];
+        else matrix[i][j] = Math.min(matrix[i - 1][j - 1] + 1, matrix[i][j - 1] + 1, matrix[i - 1][j] + 1);
+      }
+    }
+    return matrix[b.length][a.length];
+  }
+  function consonantSkeleton(s) {
+    if (!s) return "";
+    return s.toUpperCase().replace(/[^A-Z]/g, "")
+      .replace(/[AEIOU]/g, "").replace(/PH/g, "F")
+      .replace(/CK/g, "K").replace(/Q/g, "K").replace(/Z/g, "S")
+      .replace(/(.)\1+/g, "$1");
+  }
+  function soundScore(fix, query) {
+    fix = String(fix || "").toUpperCase();
+    query = String(query || "").toUpperCase();
+    if (!fix || !query) return 0;
+    const fixPh = phoneticNormalize(fix), qPh = phoneticNormalize(query);
+    const fixSk = consonantSkeleton(fix), qSk = consonantSkeleton(query);
+    let score = 0;
+    score += Math.round(soundSimilarityScore(fix, query) * 3);
+    if (fixPh === qPh) score += 200;
+    if (fixSk === qSk && fixSk.length >= 2) score += 180;
+    if (fixPh.includes(qPh) || qPh.includes(fixPh)) score += 120;
+    if (fixSk.includes(qSk) || qSk.includes(fixSk)) score += 80;
+    if (fix === query) score += 100;
+    if (fix.startsWith(query)) score += 80;
+    if (fix.includes(query)) score += 50;
+    if (fuzzy(fix, query)) score += 40;
+    const distPh = levenshtein(fixPh, qPh);
+    score += Math.max(0, 40 - distPh * 6);
+    const distRaw = levenshtein(fix, query);
+    if (distRaw <= 3) score += [300, 200, 120, 60][distRaw];
+    return score;
+  }
+
   // ── Search by Airport ICAO ──────────────────────────────────────────────────
   if (msg.type === "SEARCH_AIRPORT") {
     if (!READY) { sendResponse({ fixes: [], count: 0 }); return; }
@@ -387,107 +451,6 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       if (!READY) { sendResponse({ fixes: [] }); return; }
       const q = (msg.query || "").trim().toUpperCase();
       if (!q) { sendResponse({ fixes: [] }); return; }
-
-      // ── SandCat fuzzy search helpers ──
-
-      function phoneticNormalize(s) {
-        if (!s) return "";
-        s = s.toUpperCase().replace(/[^A-Z]/g, "");
-        const rules = [
-          [/PH/g,"F"], [/CK/g,"K"], [/Q/g,"K"], [/X/g,"KS"],
-          [/Z/g,"S"], [/DG/g,"J"], [/GH/g,"G"], [/KN/g,"N"], [/WR/g,"R"],
-          [/EE/g,"I"], [/EA/g,"I"], [/IE/g,"I"], [/EY/g,"I"], [/AY/g,"I"],
-          [/OO/g,"U"], [/OU/g,"U"],
-          [/ISN/g,"SN"], [/YSN/g,"SN"]
-        ];
-        for (const [r, rep] of rules) s = s.replace(r, rep);
-        s = s.replace(/Y/g, "I");
-        s = s.replace(/(.)\1+/g, "$1");
-        if (s.length > 1) s = s[0] + s.slice(1).replace(/[AEIOU]/g, "");
-        return s;
-      }
-
-      function fuzzy(str, pattern) {
-        let i = 0;
-        for (const c of str) {
-          if (c === pattern[i]) i++;
-          if (i === pattern.length) return true;
-        }
-        return false;
-      }
-
-      function levenshtein(a, b) {
-        const matrix = [];
-        for (let i = 0; i <= b.length; i++) matrix[i] = [i];
-        for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
-        for (let i = 1; i <= b.length; i++) {
-          for (let j = 1; j <= a.length; j++) {
-            if (b.charAt(i - 1) === a.charAt(j - 1)) {
-              matrix[i][j] = matrix[i - 1][j - 1];
-            } else {
-              matrix[i][j] = Math.min(
-                matrix[i - 1][j - 1] + 1,
-                matrix[i][j - 1] + 1,
-                matrix[i - 1][j] + 1
-              );
-            }
-          }
-        }
-        return matrix[b.length][a.length];
-      }
-
-      // Strip ALL vowels for consonant-skeleton comparison
-      function consonantSkeleton(s) {
-        if (!s) return "";
-        return s.toUpperCase()
-          .replace(/[^A-Z]/g, "")
-          .replace(/[AEIOU]/g, "")
-          .replace(/PH/g, "F")
-          .replace(/CK/g, "K")
-          .replace(/Q/g, "K")
-          .replace(/Z/g, "S")
-          .replace(/(.)\1+/g, "$1");
-      }
-
-      function soundScore(fix, query) {
-        fix = String(fix || "").toUpperCase();
-        query = String(query || "").toUpperCase();
-        if (!fix || !query) return 0;
-        const fixPh = phoneticNormalize(fix);
-        const qPh = phoneticNormalize(query);
-        const fixSk = consonantSkeleton(fix);
-        const qSk = consonantSkeleton(query);
-        let score = 0;
-
-        // Position-aware sound similarity (EVANN/IVANN = ~90% → 270 pts)
-        const simScore = soundSimilarityScore(fix, query);
-        score += Math.round(simScore * 3);
-
-        // Phonetic equality (keeps first vowel)
-        if (fixPh === qPh) score += 200;
-        // Consonant skeleton equality (EVANN/IVANN both become VN)
-        if (fixSk === qSk && fixSk.length >= 2) score += 180;
-        // Phonetic containment
-        if (fixPh.includes(qPh) || qPh.includes(fixPh)) score += 120;
-        // Skeleton containment
-        if (fixSk.includes(qSk) || qSk.includes(fixSk)) score += 80;
-        // Literal exact
-        if (fix === query) score += 100;
-        // Literal prefix
-        if (fix.startsWith(query)) score += 80;
-        // Literal substring
-        if (fix.includes(query)) score += 50;
-        // Fuzzy subsequence
-        if (fuzzy(fix, query)) score += 40;
-        // Phonetic edit distance
-        const distPh = levenshtein(fixPh, qPh);
-        score += Math.max(0, 40 - distPh * 6);
-        // Raw edit distance — heavily weighted for close matches
-        const distRaw = levenshtein(fix, query);
-        if (distRaw <= 3) score += [300, 200, 120, 60][distRaw];
-
-        return score;
-      }
 
       // ── Score all fixes ──
       const bboxFilter = msg.bbox || null;

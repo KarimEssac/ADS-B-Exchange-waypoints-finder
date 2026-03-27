@@ -25,6 +25,19 @@ const btnVisualSettings = document.getElementById("btnVisualSettings");
 const visualSettingsModal = document.getElementById("visualSettingsModal");
 const btnCloseVisual = document.getElementById("btnCloseVisual");
 
+// ── Hide/show quick-access button with popup lifecycle ──────────────────────
+// Use a port — Chrome auto-disconnects when the popup closes for any reason
+(async () => {
+  try {
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (tabs[0]) {
+      const port = chrome.tabs.connect(tabs[0].id, { name: "wpt_popup_alive" });
+      // Errors on disconnect are expected; silently ignore
+      port.onDisconnect.addListener(() => {});
+    }
+  } catch(_) {}
+})();
+
 // ── Visual Settings modal open/close ─────────────────────────────────────────
 btnVisualSettings.addEventListener("click", () => {
   visualSettingsModal.style.display = "block";
@@ -206,6 +219,31 @@ togTextSameAsWpt.addEventListener("change", () => {
     textColorPreview.style.background = togFixColor.value;
     sendToggle("textColor", togFixColor.value);
   }
+});
+
+// ── Area Selection ───────────────────────────────────────────────────────────
+const btnSelectArea = document.getElementById("btnSelectArea");
+btnSelectArea.addEventListener("click", async () => {
+  try {
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tabs[0]) return;
+    await ensureContentScripts(tabs[0].id);
+    // Fire and forget — don't await since popup will close
+    chrome.tabs.sendMessage(tabs[0].id, {
+      __wpt_source: "popup",
+      type: "WPT_START_SELECTION"
+    });
+    // Small delay to ensure message is dispatched before popup closes
+    setTimeout(() => window.close(), 150);
+  } catch (e) {
+    console.error("[WPT] Failed to start area selection:", e);
+  }
+});
+btnSelectArea.addEventListener("mouseover", () => {
+  btnSelectArea.style.borderColor = "#58a6ff";
+});
+btnSelectArea.addEventListener("mouseout", () => {
+  btnSelectArea.style.borderColor = "#30363d";
 });
 
 // ── Search Mode (3-way: all / view / airport) ────────────────────────────────

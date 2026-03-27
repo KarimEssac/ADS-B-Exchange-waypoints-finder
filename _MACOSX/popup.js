@@ -11,7 +11,49 @@ const togVors    = document.getElementById("togVors");
 const togNdbs    = document.getElementById("togNdbs");
 const searchBox  = document.getElementById("searchBox");
 const searchResults = document.getElementById("searchResults");
+const togShowBtn = document.getElementById("togShowBtn");
+const togLabelSize = document.getElementById("togLabelSize");
+const btnLabelDefault = document.getElementById("btnLabelDefault");
+const togScaleDot = document.getElementById("togScaleDot");
+const togFixColor = document.getElementById("togFixColor");
+const btnFixColorDefault = document.getElementById("btnFixColorDefault");
+const fixColorPreview = document.getElementById("fixColorPreview");
+const togTextColor = document.getElementById("togTextColor");
+const textColorPreview = document.getElementById("textColorPreview");
+const togTextSameAsWpt = document.getElementById("togTextSameAsWpt");
+const btnVisualSettings = document.getElementById("btnVisualSettings");
+const visualSettingsModal = document.getElementById("visualSettingsModal");
+const btnCloseVisual = document.getElementById("btnCloseVisual");
 
+// ── Hide/show quick-access button with popup lifecycle ──────────────────────
+// Use a port — Chrome auto-disconnects when the popup closes for any reason
+(async () => {
+  try {
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (tabs[0]) {
+      const port = chrome.tabs.connect(tabs[0].id, { name: "wpt_popup_alive" });
+      // Errors on disconnect are expected; silently ignore
+      port.onDisconnect.addListener(() => {});
+    }
+  } catch(_) {}
+})();
+
+// ── Visual Settings modal open/close ─────────────────────────────────────────
+btnVisualSettings.addEventListener("click", () => {
+  visualSettingsModal.style.display = "block";
+});
+btnCloseVisual.addEventListener("click", () => {
+  visualSettingsModal.style.display = "none";
+});
+visualSettingsModal.addEventListener("click", (e) => {
+  if (e.target === visualSettingsModal) visualSettingsModal.style.display = "none";
+});
+btnVisualSettings.addEventListener("mouseover", () => {
+  btnVisualSettings.style.background = "#30363d";
+});
+btnVisualSettings.addEventListener("mouseout", () => {
+  btnVisualSettings.style.background = "#21262d";
+});
 // ── Ensure content scripts are injected ──────────────────────────────────────
 async function ensureContentScripts(tabId) {
   try {
@@ -53,7 +95,7 @@ async function checkStatus() {
 checkStatus();
 
 // ── Restore saved toggle states ───────────────────────────────────────────────
-chrome.storage.local.get(["wpt_enabled", "wpt_showFixes", "wpt_showIntersects", "wpt_showVors", "wpt_showNdbs", "wpt_opacity"], (data) => {
+chrome.storage.local.get(["wpt_enabled", "wpt_showFixes", "wpt_showIntersects", "wpt_showVors", "wpt_showNdbs", "wpt_opacity", "wpt_showBtn", "wpt_labelSize", "wpt_scaleDot", "wpt_fixColor", "wpt_textColor", "wpt_textSameAsWpt"], (data) => {
   if (data.wpt_enabled !== undefined) {
     togEnabled.checked = data.wpt_enabled;
     updateSubTogglesVisuals(data.wpt_enabled);
@@ -63,6 +105,22 @@ chrome.storage.local.get(["wpt_enabled", "wpt_showFixes", "wpt_showIntersects", 
   if (data.wpt_showVors  !== undefined) togVors.checked  = data.wpt_showVors;
   if (data.wpt_showNdbs  !== undefined) togNdbs.checked  = data.wpt_showNdbs;
   if (data.wpt_opacity   !== undefined) togOpacity.value = data.wpt_opacity;
+  if (data.wpt_showBtn !== undefined) togShowBtn.checked = data.wpt_showBtn;
+  if (data.wpt_labelSize !== undefined) togLabelSize.value = data.wpt_labelSize;
+  if (data.wpt_scaleDot !== undefined) togScaleDot.checked = data.wpt_scaleDot;
+  if (data.wpt_fixColor !== undefined) {
+    togFixColor.value = data.wpt_fixColor;
+    fixColorPreview.style.background = data.wpt_fixColor;
+  }
+  if (data.wpt_textColor !== undefined) {
+    togTextColor.value = data.wpt_textColor;
+    textColorPreview.style.background = data.wpt_textColor;
+  }
+  if (data.wpt_textSameAsWpt !== undefined) {
+    togTextSameAsWpt.checked = data.wpt_textSameAsWpt;
+    togTextColor.disabled = data.wpt_textSameAsWpt;
+    togTextColor.style.opacity = data.wpt_textSameAsWpt ? "0.4" : "1";
+  }
 });
 
 chrome.storage.onChanged.addListener((changes, namespace) => {
@@ -120,35 +178,179 @@ togFixes.addEventListener("change", () => sendToggle("showFixes", togFixes.check
 togIntersects.addEventListener("change", () => sendToggle("showIntersects", togIntersects.checked));
 togVors.addEventListener("change",  () => sendToggle("showVors",  togVors.checked));
 togNdbs.addEventListener("change",  () => sendToggle("showNdbs",  togNdbs.checked));
+togShowBtn.addEventListener("change", () => sendToggle("showBtn", togShowBtn.checked));
+togLabelSize.addEventListener("input", () => sendToggle("labelSize", parseFloat(togLabelSize.value)));
+btnLabelDefault.addEventListener("click", () => {
+  togLabelSize.value = 1.0;
+  sendToggle("labelSize", 1.0);
+});
+togScaleDot.addEventListener("change", () => sendToggle("scaleDot", togScaleDot.checked));
+togFixColor.addEventListener("input", () => {
+  fixColorPreview.style.background = togFixColor.value;
+  sendToggle("fixColor", togFixColor.value);
+  // Sync text color if "same as waypoint" is checked
+  if (togTextSameAsWpt.checked) {
+    togTextColor.value = togFixColor.value;
+    textColorPreview.style.background = togFixColor.value;
+    sendToggle("textColor", togFixColor.value);
+  }
+});
+btnFixColorDefault.addEventListener("click", () => {
+  togFixColor.value = "#3fb950";
+  fixColorPreview.style.background = "#3fb950";
+  sendToggle("fixColor", "#3fb950");
+  if (togTextSameAsWpt.checked) {
+    togTextColor.value = "#3fb950";
+    textColorPreview.style.background = "#3fb950";
+    sendToggle("textColor", "#3fb950");
+  }
+});
+togTextColor.addEventListener("input", () => {
+  textColorPreview.style.background = togTextColor.value;
+  sendToggle("textColor", togTextColor.value);
+});
+togTextSameAsWpt.addEventListener("change", () => {
+  const checked = togTextSameAsWpt.checked;
+  chrome.storage.local.set({ wpt_textSameAsWpt: checked });
+  togTextColor.disabled = checked;
+  togTextColor.style.opacity = checked ? "0.4" : "1";
+  if (checked) {
+    togTextColor.value = togFixColor.value;
+    textColorPreview.style.background = togFixColor.value;
+    sendToggle("textColor", togFixColor.value);
+  }
+});
 
-const togAreaSearch = document.getElementById("togAreaSearch");
-const areaSearchDot   = document.getElementById("areaSearchDot");
-const areaSearchLabel = document.getElementById("areaSearchLabel");
+// ── Area Selection ───────────────────────────────────────────────────────────
+const btnSelectArea = document.getElementById("btnSelectArea");
+btnSelectArea.addEventListener("click", async () => {
+  try {
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tabs[0]) return;
+    await ensureContentScripts(tabs[0].id);
+    // Fire and forget — don't await since popup will close
+    chrome.tabs.sendMessage(tabs[0].id, {
+      __wpt_source: "popup",
+      type: "WPT_START_SELECTION"
+    });
+    // Small delay to ensure message is dispatched before popup closes
+    setTimeout(() => window.close(), 150);
+  } catch (e) {
+    console.error("[WPT] Failed to start area selection:", e);
+  }
+});
+btnSelectArea.addEventListener("mouseover", () => {
+  btnSelectArea.style.borderColor = "#58a6ff";
+});
+btnSelectArea.addEventListener("mouseout", () => {
+  btnSelectArea.style.borderColor = "#30363d";
+});
 
-function updateAreaToggleVisuals(isAreaMode) {
-  if (isAreaMode) {
-    areaSearchDot.style.background   = "#58a6ff";
-    areaSearchLabel.textContent      = "Current View";
-    areaSearchLabel.style.color      = "#58a6ff";
+// ── Search Mode (3-way: all / view / airport) ────────────────────────────────
+const modeAll = document.getElementById("modeAll");
+const modeView = document.getElementById("modeView");
+const modeAirport = document.getElementById("modeAirport");
+const icaoRow = document.getElementById("icaoRow");
+const icaoInput = document.getElementById("icaoInput");
+const icaoStatus = document.getElementById("icaoStatus");
+const modeBtns = [modeAll, modeView, modeAirport];
+
+let searchMode = "all"; // "all" | "view" | "airport"
+let airportIcao = "";   // current ICAO for airport mode
+let airportFixCount = 0;
+
+const MODE_COLORS = { all: "#3fb950", view: "#58a6ff", airport: "#f07178" };
+
+function setSearchMode(mode) {
+  searchMode = mode;
+  chrome.storage.local.set({ wpt_searchMode: mode });
+  modeBtns.forEach(btn => {
+    btn.style.background = "transparent";
+    btn.style.color = "#8b949e";
+  });
+  const activeBtn = mode === "all" ? modeAll : mode === "view" ? modeView : modeAirport;
+  activeBtn.style.background = MODE_COLORS[mode];
+  activeBtn.style.color = "#0d1117";
+
+  // Clear previous search when switching modes
+  searchBox.value = "";
+  searchResults.innerHTML = "";
+  document.body.classList.remove("searching");
+  chrome.storage.local.set({ wpt_lastSearch: "" });
+
+  // Show/hide ICAO input
+  icaoRow.style.display = mode === "airport" ? "block" : "none";
+
+  // Show/hide search box: in airport mode, only show if valid ICAO loaded
+  if (mode === "airport") {
+    const hasValid = airportIcao && airportFixCount > 0;
+    searchBox.style.display = hasValid ? "" : "none";
+    searchBox.placeholder = hasValid ? `Search in ${airportIcao}` : "";
+    if (airportIcao) loadAirportFixes();
   } else {
-    areaSearchDot.style.background   = "#3fb950";
-    areaSearchLabel.textContent      = "All USA";
-    areaSearchLabel.style.color      = "#e6edf3";
+    searchBox.style.display = "";
+    searchBox.placeholder = "Type fix ident";
   }
 }
 
-// ── Restore area search toggle state ─────────────────────────────────────────
-chrome.storage.local.get("wpt_areaSearch", (data) => {
-  if (data.wpt_areaSearch !== undefined) togAreaSearch.checked = data.wpt_areaSearch;
-  updateAreaToggleVisuals(togAreaSearch.checked);
+modeAll.addEventListener("click", () => setSearchMode("all"));
+modeView.addEventListener("click", () => setSearchMode("view"));
+modeAirport.addEventListener("click", () => setSearchMode("airport"));
+
+// ── ICAO input handling ──────────────────────────────────────────────────────
+let _icaoTimer = null;
+icaoInput.addEventListener("input", () => {
+  clearTimeout(_icaoTimer);
+  const icao = icaoInput.value.trim().toUpperCase();
+  chrome.storage.local.set({ wpt_airportIcao: icao });
+  if (icao.length >= 3) {
+    _icaoTimer = setTimeout(() => {
+      airportIcao = icao;
+      loadAirportFixes();
+    }, 300);
+  } else {
+    icaoStatus.textContent = "";
+    searchResults.innerHTML = "";
+    airportIcao = "";
+    airportFixCount = 0;
+    searchBox.style.display = "none";
+  }
 });
 
-togAreaSearch.addEventListener("change", () => {
-  chrome.storage.local.set({ wpt_areaSearch: togAreaSearch.checked });
-  updateAreaToggleVisuals(togAreaSearch.checked);
-  // Re-run search with new scope if there's an active query
-  const q = searchBox.value.trim();
-  if (q) doSearch(q);
+async function loadAirportFixes() {
+  icaoStatus.textContent = "Loading…";
+  try {
+    const res = await chrome.runtime.sendMessage({ type: "SEARCH_AIRPORT", icao: airportIcao });
+    airportFixCount = res.count || 0;
+    if (airportFixCount === 0) {
+      icaoStatus.textContent = "No waypoints found for this ICAO";
+      searchResults.innerHTML = "";
+      searchBox.style.display = "none";
+    } else {
+      icaoStatus.textContent = `${airportFixCount} waypoints found`;
+      searchBox.style.display = "";
+      searchBox.placeholder = `Search in ${airportIcao}`;
+      // Show all if no search query
+      const q = searchBox.value.trim();
+      if (!q) {
+        const fixes = (res.fixes || []).filter(f => f.type !== "intersect");
+        document.body.classList.add("searching");
+        renderResults(fixes);
+      }
+    }
+  } catch (e) {
+    icaoStatus.textContent = "Error loading airport data";
+  }
+}
+
+// ── Restore search mode ──────────────────────────────────────────────────────
+chrome.storage.local.get(["wpt_searchMode", "wpt_airportIcao"], (data) => {
+  if (data.wpt_airportIcao) {
+    airportIcao = data.wpt_airportIcao;
+    icaoInput.value = airportIcao;
+  }
+  const mode = data.wpt_searchMode || "all";
+  setSearchMode(mode);
 });
 
 // ── Helper: get current map bbox from content script ─────────────────────────
@@ -173,25 +375,43 @@ let _searchTimer = null;
 searchBox.addEventListener("input", () => {
   clearTimeout(_searchTimer);
   const q = searchBox.value.trim();
-  if (!q) { searchResults.innerHTML = ""; return; }
+  // Persist search query so it survives popup close/reopen
+  chrome.storage.local.set({ wpt_lastSearch: q });
+  if (!q) {
+    searchResults.innerHTML = "";
+    document.body.classList.remove("searching");
+    // In airport mode with ICAO set, show all fixes again
+    if (searchMode === "airport" && airportIcao) loadAirportFixes();
+    return;
+  }
+  document.body.classList.add("searching");
   _searchTimer = setTimeout(() => doSearch(q), 250);
 });
 
 async function doSearch(q) {
   searchResults.innerHTML = `<div class="no-results">Searching…</div>`;
   try {
-    const [res, bbox] = await Promise.all([
-      chrome.runtime.sendMessage({ type: "SEARCH_FIX", query: q.toUpperCase() }),
-      togAreaSearch.checked ? getMapBbox() : Promise.resolve(null)
-    ]);
+    let fixes = [];
 
-    let fixes = res.fixes || [];
-
-    if (togAreaSearch.checked && bbox) {
-      fixes = fixes.filter(f =>
-        f.lat >= bbox.minLat && f.lat <= bbox.maxLat &&
-        f.lon >= bbox.minLon && f.lon <= bbox.maxLon
-      );
+    if (searchMode === "airport") {
+      // Search within airport fixes
+      if (!airportIcao) {
+        searchResults.innerHTML = `<div class="no-results">Enter an ICAO code first</div>`;
+        return;
+      }
+      const res = await chrome.runtime.sendMessage({
+        type: "SEARCH_AIRPORT", icao: airportIcao, query: q.toUpperCase()
+      });
+      fixes = (res.fixes || []).filter(f => f.type !== "intersect");
+    } else {
+      // All Available or Current View
+      const searchMsg = { type: "SEARCH_FIX", query: q.toUpperCase() };
+      if (searchMode === "view") {
+        const bbox = await getMapBbox();
+        if (bbox) searchMsg.bbox = bbox;
+      }
+      const res = await chrome.runtime.sendMessage(searchMsg);
+      fixes = (res.fixes || []).filter(f => f.type !== "intersect");
     }
 
     renderResults(fixes);
@@ -250,3 +470,13 @@ function typeColor(t) {
 function typeLabel(t) {
   return t === "vor" ? "VOR" : t === "ndb" ? "NDB" : t === "airport" ? "APT" : t === "intersect" ? "INT" : "FIX";
 }
+
+// ── Restore last search on popup reopen ───────────────────────────────────────
+chrome.storage.local.get("wpt_lastSearch", (data) => {
+  const lastQ = data.wpt_lastSearch || "";
+  if (lastQ) {
+    searchBox.value = lastQ;
+    document.body.classList.add("searching");
+    doSearch(lastQ);
+  }
+});
