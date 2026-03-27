@@ -422,22 +422,33 @@
   <div class="search-section">
     <div class="section-title">Search Waypoint</div>
 
-    <div class="toggle-row area-toggle-row">
-      <div class="toggle-label">
-        <div class="dot-icon" id="areaSearchDot" style="background:#3fb950"></div>
-        <span id="areaSearchLabel">All Available</span>
+    <div style="margin-bottom: 8px;">
+      <div style="display: flex; gap: 4px; background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 3px;">
+        <button class="mode-btn active" id="modeAll" style="flex:1; padding: 5px 0; border: none; border-radius: 4px; font-size: 10px; font-weight: 600; cursor: pointer; background: #58a6ff; color: #0d1117; transition: all 0.2s;">All Available</button>
+        <button class="mode-btn" id="modeView" style="flex:1; padding: 5px 0; border: none; border-radius: 4px; font-size: 10px; font-weight: 600; cursor: pointer; background: transparent; color: #8b949e; transition: all 0.2s;">Current View</button>
+        <button class="mode-btn" id="modeAirport" style="flex:1; padding: 5px 0; border: none; border-radius: 4px; font-size: 10px; font-weight: 600; cursor: pointer; background: transparent; color: #8b949e; transition: all 0.2s;">Airport</button>
       </div>
-      <label class="switch">
-        <input type="checkbox" id="togAreaSearch">
-        <div class="slider"></div>
-      </label>
+    </div>
+
+    <div id="icaoRow" style="display: none; margin-bottom: 6px;">
+      <input
+        type="text"
+        id="icaoInput"
+        class="search-box"
+        placeholder="Enter ICAO (e.g. KLAX)"
+        autocomplete="off"
+        spellcheck="false"
+        maxlength="4"
+        style="text-transform: uppercase; font-weight: 600; letter-spacing: 1px;"
+      />
+      <div id="icaoStatus" style="font-size: 10px; color: #8b949e; margin-top: 3px; margin-left: 2px;"></div>
     </div>
 
     <input
       type="text"
       class="search-box"
       id="searchBox"
-      placeholder="Type fix ident (e.g. KLAX, MAIER…)"
+      placeholder="Type fix ident"
       autocomplete="off"
       spellcheck="false"
     />

@@ -208,34 +208,111 @@ togTextSameAsWpt.addEventListener("change", () => {
   }
 });
 
-const togAreaSearch = document.getElementById("togAreaSearch");
-const areaSearchDot   = document.getElementById("areaSearchDot");
-const areaSearchLabel = document.getElementById("areaSearchLabel");
+// ── Search Mode (3-way: all / view / airport) ────────────────────────────────
+const modeAll = document.getElementById("modeAll");
+const modeView = document.getElementById("modeView");
+const modeAirport = document.getElementById("modeAirport");
+const icaoRow = document.getElementById("icaoRow");
+const icaoInput = document.getElementById("icaoInput");
+const icaoStatus = document.getElementById("icaoStatus");
+const modeBtns = [modeAll, modeView, modeAirport];
 
-function updateAreaToggleVisuals(isAreaMode) {
-  if (isAreaMode) {
-    areaSearchDot.style.background   = "#58a6ff";
-    areaSearchLabel.textContent      = "Current View";
-    areaSearchLabel.style.color      = "#58a6ff";
+let searchMode = "all"; // "all" | "view" | "airport"
+let airportIcao = "";   // current ICAO for airport mode
+let airportFixCount = 0;
+
+const MODE_COLORS = { all: "#3fb950", view: "#58a6ff", airport: "#f07178" };
+
+function setSearchMode(mode) {
+  searchMode = mode;
+  chrome.storage.local.set({ wpt_searchMode: mode });
+  modeBtns.forEach(btn => {
+    btn.style.background = "transparent";
+    btn.style.color = "#8b949e";
+  });
+  const activeBtn = mode === "all" ? modeAll : mode === "view" ? modeView : modeAirport;
+  activeBtn.style.background = MODE_COLORS[mode];
+  activeBtn.style.color = "#0d1117";
+
+  // Clear previous search when switching modes
+  searchBox.value = "";
+  searchResults.innerHTML = "";
+  document.body.classList.remove("searching");
+  chrome.storage.local.set({ wpt_lastSearch: "" });
+
+  // Show/hide ICAO input
+  icaoRow.style.display = mode === "airport" ? "block" : "none";
+
+  // Show/hide search box: in airport mode, only show if valid ICAO loaded
+  if (mode === "airport") {
+    const hasValid = airportIcao && airportFixCount > 0;
+    searchBox.style.display = hasValid ? "" : "none";
+    searchBox.placeholder = hasValid ? `Search in ${airportIcao}` : "";
+    if (airportIcao) loadAirportFixes();
   } else {
-    areaSearchDot.style.background   = "#3fb950";
-    areaSearchLabel.textContent      = "All Available";
-    areaSearchLabel.style.color      = "#e6edf3";
+    searchBox.style.display = "";
+    searchBox.placeholder = "Type fix ident";
   }
 }
 
-// ── Restore area search toggle state ─────────────────────────────────────────
-chrome.storage.local.get("wpt_areaSearch", (data) => {
-  if (data.wpt_areaSearch !== undefined) togAreaSearch.checked = data.wpt_areaSearch;
-  updateAreaToggleVisuals(togAreaSearch.checked);
+modeAll.addEventListener("click", () => setSearchMode("all"));
+modeView.addEventListener("click", () => setSearchMode("view"));
+modeAirport.addEventListener("click", () => setSearchMode("airport"));
+
+// ── ICAO input handling ──────────────────────────────────────────────────────
+let _icaoTimer = null;
+icaoInput.addEventListener("input", () => {
+  clearTimeout(_icaoTimer);
+  const icao = icaoInput.value.trim().toUpperCase();
+  chrome.storage.local.set({ wpt_airportIcao: icao });
+  if (icao.length >= 3) {
+    _icaoTimer = setTimeout(() => {
+      airportIcao = icao;
+      loadAirportFixes();
+    }, 300);
+  } else {
+    icaoStatus.textContent = "";
+    searchResults.innerHTML = "";
+    airportIcao = "";
+    airportFixCount = 0;
+    searchBox.style.display = "none";
+  }
 });
 
-togAreaSearch.addEventListener("change", () => {
-  chrome.storage.local.set({ wpt_areaSearch: togAreaSearch.checked });
-  updateAreaToggleVisuals(togAreaSearch.checked);
-  // Re-run search with new scope if there's an active query
-  const q = searchBox.value.trim();
-  if (q) doSearch(q);
+async function loadAirportFixes() {
+  icaoStatus.textContent = "Loading…";
+  try {
+    const res = await chrome.runtime.sendMessage({ type: "SEARCH_AIRPORT", icao: airportIcao });
+    airportFixCount = res.count || 0;
+    if (airportFixCount === 0) {
+      icaoStatus.textContent = "No waypoints found for this ICAO";
+      searchResults.innerHTML = "";
+      searchBox.style.display = "none";
+    } else {
+      icaoStatus.textContent = `${airportFixCount} waypoints found`;
+      searchBox.style.display = "";
+      searchBox.placeholder = `Search in ${airportIcao}`;
+      // Show all if no search query
+      const q = searchBox.value.trim();
+      if (!q) {
+        const fixes = (res.fixes || []).filter(f => f.type !== "intersect");
+        document.body.classList.add("searching");
+        renderResults(fixes);
+      }
+    }
+  } catch (e) {
+    icaoStatus.textContent = "Error loading airport data";
+  }
+}
+
+// ── Restore search mode ──────────────────────────────────────────────────────
+chrome.storage.local.get(["wpt_searchMode", "wpt_airportIcao"], (data) => {
+  if (data.wpt_airportIcao) {
+    airportIcao = data.wpt_airportIcao;
+    icaoInput.value = airportIcao;
+  }
+  const mode = data.wpt_searchMode || "all";
+  setSearchMode(mode);
 });
 
 // ── Helper: get current map bbox from content script ─────────────────────────
@@ -265,6 +342,8 @@ searchBox.addEventListener("input", () => {
   if (!q) {
     searchResults.innerHTML = "";
     document.body.classList.remove("searching");
+    // In airport mode with ICAO set, show all fixes again
+    if (searchMode === "airport" && airportIcao) loadAirportFixes();
     return;
   }
   document.body.classList.add("searching");
@@ -274,18 +353,28 @@ searchBox.addEventListener("input", () => {
 async function doSearch(q) {
   searchResults.innerHTML = `<div class="no-results">Searching…</div>`;
   try {
-    // In Current View mode, get bbox first and send it to the background
-    // so the search only scores fixes within the visible map area
-    const searchMsg = { type: "SEARCH_FIX", query: q.toUpperCase() };
+    let fixes = [];
 
-    if (togAreaSearch.checked) {
-      const bbox = await getMapBbox();
-      if (bbox) searchMsg.bbox = bbox;
+    if (searchMode === "airport") {
+      // Search within airport fixes
+      if (!airportIcao) {
+        searchResults.innerHTML = `<div class="no-results">Enter an ICAO code first</div>`;
+        return;
+      }
+      const res = await chrome.runtime.sendMessage({
+        type: "SEARCH_AIRPORT", icao: airportIcao, query: q.toUpperCase()
+      });
+      fixes = (res.fixes || []).filter(f => f.type !== "intersect");
+    } else {
+      // All Available or Current View
+      const searchMsg = { type: "SEARCH_FIX", query: q.toUpperCase() };
+      if (searchMode === "view") {
+        const bbox = await getMapBbox();
+        if (bbox) searchMsg.bbox = bbox;
+      }
+      const res = await chrome.runtime.sendMessage(searchMsg);
+      fixes = (res.fixes || []).filter(f => f.type !== "intersect");
     }
-
-    const res = await chrome.runtime.sendMessage(searchMsg);
-    // Filter out intersections (white dots) from search results
-    const fixes = (res.fixes || []).filter(f => f.type !== "intersect");
 
     renderResults(fixes);
   } catch (e) {

@@ -291,6 +291,43 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     return true;
   }
 
+  // ── Search by Airport ICAO ──────────────────────────────────────────────────
+  if (msg.type === "SEARCH_AIRPORT") {
+    if (!READY) { sendResponse({ fixes: [], count: 0 }); return; }
+    const icao = (msg.icao || "").toUpperCase().trim();
+    if (!icao) { sendResponse({ fixes: [], count: 0 }); return; }
+
+    // Collect all fixes for this airport
+    const airportFixes = FIXES.filter(f => f.airport === icao);
+
+    const q = (msg.query || "").toUpperCase().trim();
+    if (!q) {
+      // No search query — return all fixes for this airport
+      const result = airportFixes.slice(0, 100).map(f => ({
+        ident: f.ident, lat: f.lat, lon: f.lon, type: f.type, name: f.name
+      }));
+      sendResponse({ fixes: result, count: airportFixes.length });
+      return true;
+    }
+
+    // Score and sort airport fixes by fuzzy match
+    const scored = [];
+    for (const f of airportFixes) {
+      let score = soundScore(f.ident, q);
+      if (f.name) {
+        const nameScore = soundScore(f.name.replace(/[^A-Z]/g, ""), q);
+        score = Math.max(score, nameScore);
+      }
+      if (score > 0) scored.push({ fix: f, score });
+    }
+    scored.sort((a, b) => b.score - a.score);
+    const result = scored.slice(0, 50).map(s => ({
+      ident: s.fix.ident, lat: s.fix.lat, lon: s.fix.lon,
+      type: s.fix.type, name: s.fix.name
+    }));
+    sendResponse({ fixes: result, count: airportFixes.length });
+    return true;
+  }
   if (msg.type === "OPEN_POPUP") {
     if (chrome.action && chrome.action.openPopup) {
       chrome.action.openPopup().then(() => sendResponse({ ok: true })).catch(err => {

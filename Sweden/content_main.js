@@ -239,6 +239,15 @@
   function getColorMap() {
     return { airport: Settings.fixColor, fix: Settings.fixColor, intersect: "#ffffff", vor: "#58a6ff", ndb: "#f85149" };
   }
+  // If a hex color is too dark, return white for readability on dark tooltips
+  function readableColor(hex) {
+    const c = hex.replace("#", "");
+    const r = parseInt(c.substring(0, 2), 16);
+    const g = parseInt(c.substring(2, 4), 16);
+    const b = parseInt(c.substring(4, 6), 16);
+    const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return lum < 0.4 ? "#ffffff" : hex;
+  }
 
   function drawShape(type, x, y, r) {
     if (type === "vor") {
@@ -456,7 +465,7 @@
           const COPY_DURATION = 400; // ms to keep "Copied" visible
           _copiedUntil = Date.now() + COPY_DURATION;
           const color = getColorMap()[fix.type] || Settings.fixColor;
-          tooltip.innerHTML = `<span style="color:${color};font-weight:bold;font-size:14px">Copied ${lowerIdent} to clipboard</span>`;
+          tooltip.innerHTML = `<span style="color:${readableColor(color)};font-weight:bold;font-size:14px">Copied ${lowerIdent} to clipboard</span>`;
           tooltip.style.display = "block";
           setTimeout(() => { _copiedUntil = 0; }, COPY_DURATION);
         }
@@ -486,7 +495,7 @@
       const dotColor = getColorMap()[fix.type] || Settings.fixColor;
       const labelColor = (fix.type === "fix" || fix.type === "airport") ? Settings.textColor : dotColor;
       const label = fix.name ? `${fix.ident} (${fix.name})` : fix.ident;
-      tooltip.innerHTML = `<span style="font-size:15px;font-weight:bold;color:${labelColor}">${label}</span>`;
+      tooltip.innerHTML = `<span style="font-size:15px;font-weight:bold;color:${readableColor(labelColor)}">${label}</span>`;
       tooltip.style.display = "block";
       tooltip.style.left = (e.clientX + 16) + "px";
       tooltip.style.top  = (e.clientY - 8) + "px";
