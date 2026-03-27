@@ -14,7 +14,33 @@ const searchResults = document.getElementById("searchResults");
 const togShowBtn = document.getElementById("togShowBtn");
 const togLabelSize = document.getElementById("togLabelSize");
 const btnLabelDefault = document.getElementById("btnLabelDefault");
+const togScaleDot = document.getElementById("togScaleDot");
+const togFixColor = document.getElementById("togFixColor");
+const btnFixColorDefault = document.getElementById("btnFixColorDefault");
+const fixColorPreview = document.getElementById("fixColorPreview");
+const togTextColor = document.getElementById("togTextColor");
+const textColorPreview = document.getElementById("textColorPreview");
+const togTextSameAsWpt = document.getElementById("togTextSameAsWpt");
+const btnVisualSettings = document.getElementById("btnVisualSettings");
+const visualSettingsModal = document.getElementById("visualSettingsModal");
+const btnCloseVisual = document.getElementById("btnCloseVisual");
 
+// ── Visual Settings modal open/close ─────────────────────────────────────────
+btnVisualSettings.addEventListener("click", () => {
+  visualSettingsModal.style.display = "block";
+});
+btnCloseVisual.addEventListener("click", () => {
+  visualSettingsModal.style.display = "none";
+});
+visualSettingsModal.addEventListener("click", (e) => {
+  if (e.target === visualSettingsModal) visualSettingsModal.style.display = "none";
+});
+btnVisualSettings.addEventListener("mouseover", () => {
+  btnVisualSettings.style.background = "#30363d";
+});
+btnVisualSettings.addEventListener("mouseout", () => {
+  btnVisualSettings.style.background = "#21262d";
+});
 // ── Ensure content scripts are injected ──────────────────────────────────────
 async function ensureContentScripts(tabId) {
   try {
@@ -56,7 +82,7 @@ async function checkStatus() {
 checkStatus();
 
 // ── Restore saved toggle states ───────────────────────────────────────────────
-chrome.storage.local.get(["wpt_enabled", "wpt_showFixes", "wpt_showIntersects", "wpt_showVors", "wpt_showNdbs", "wpt_opacity", "wpt_showBtn", "wpt_labelSize"], (data) => {
+chrome.storage.local.get(["wpt_enabled", "wpt_showFixes", "wpt_showIntersects", "wpt_showVors", "wpt_showNdbs", "wpt_opacity", "wpt_showBtn", "wpt_labelSize", "wpt_scaleDot", "wpt_fixColor", "wpt_textColor", "wpt_textSameAsWpt"], (data) => {
   if (data.wpt_enabled !== undefined) {
     togEnabled.checked = data.wpt_enabled;
     updateSubTogglesVisuals(data.wpt_enabled);
@@ -68,6 +94,20 @@ chrome.storage.local.get(["wpt_enabled", "wpt_showFixes", "wpt_showIntersects", 
   if (data.wpt_opacity   !== undefined) togOpacity.value = data.wpt_opacity;
   if (data.wpt_showBtn !== undefined) togShowBtn.checked = data.wpt_showBtn;
   if (data.wpt_labelSize !== undefined) togLabelSize.value = data.wpt_labelSize;
+  if (data.wpt_scaleDot !== undefined) togScaleDot.checked = data.wpt_scaleDot;
+  if (data.wpt_fixColor !== undefined) {
+    togFixColor.value = data.wpt_fixColor;
+    fixColorPreview.style.background = data.wpt_fixColor;
+  }
+  if (data.wpt_textColor !== undefined) {
+    togTextColor.value = data.wpt_textColor;
+    textColorPreview.style.background = data.wpt_textColor;
+  }
+  if (data.wpt_textSameAsWpt !== undefined) {
+    togTextSameAsWpt.checked = data.wpt_textSameAsWpt;
+    togTextColor.disabled = data.wpt_textSameAsWpt;
+    togTextColor.style.opacity = data.wpt_textSameAsWpt ? "0.4" : "1";
+  }
 });
 
 chrome.storage.onChanged.addListener((changes, namespace) => {
@@ -130,6 +170,42 @@ togLabelSize.addEventListener("input", () => sendToggle("labelSize", parseFloat(
 btnLabelDefault.addEventListener("click", () => {
   togLabelSize.value = 1.0;
   sendToggle("labelSize", 1.0);
+});
+togScaleDot.addEventListener("change", () => sendToggle("scaleDot", togScaleDot.checked));
+togFixColor.addEventListener("input", () => {
+  fixColorPreview.style.background = togFixColor.value;
+  sendToggle("fixColor", togFixColor.value);
+  // Sync text color if "same as waypoint" is checked
+  if (togTextSameAsWpt.checked) {
+    togTextColor.value = togFixColor.value;
+    textColorPreview.style.background = togFixColor.value;
+    sendToggle("textColor", togFixColor.value);
+  }
+});
+btnFixColorDefault.addEventListener("click", () => {
+  togFixColor.value = "#3fb950";
+  fixColorPreview.style.background = "#3fb950";
+  sendToggle("fixColor", "#3fb950");
+  if (togTextSameAsWpt.checked) {
+    togTextColor.value = "#3fb950";
+    textColorPreview.style.background = "#3fb950";
+    sendToggle("textColor", "#3fb950");
+  }
+});
+togTextColor.addEventListener("input", () => {
+  textColorPreview.style.background = togTextColor.value;
+  sendToggle("textColor", togTextColor.value);
+});
+togTextSameAsWpt.addEventListener("change", () => {
+  const checked = togTextSameAsWpt.checked;
+  chrome.storage.local.set({ wpt_textSameAsWpt: checked });
+  togTextColor.disabled = checked;
+  togTextColor.style.opacity = checked ? "0.4" : "1";
+  if (checked) {
+    togTextColor.value = togFixColor.value;
+    textColorPreview.style.background = togFixColor.value;
+    sendToggle("textColor", togFixColor.value);
+  }
 });
 
 const togAreaSearch = document.getElementById("togAreaSearch");

@@ -258,7 +258,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
   if (msg.type === "GET_SETTINGS") {
     chrome.storage.local.get(
-      ["wpt_enabled", "wpt_showFixes", "wpt_showIntersects", "wpt_showVors", "wpt_showNdbs", "wpt_opacity", "wpt_showBtn", "wpt_labelSize"],
+      ["wpt_enabled", "wpt_showFixes", "wpt_showIntersects", "wpt_showVors", "wpt_showNdbs", "wpt_opacity", "wpt_showBtn", "wpt_labelSize", "wpt_scaleDot", "wpt_fixColor", "wpt_textColor"],
       (data) => {
         sendResponse({
           enabled:       data.wpt_enabled       !== undefined ? data.wpt_enabled       : true,
@@ -269,6 +269,9 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           opacity:       data.wpt_opacity        !== undefined ? data.wpt_opacity       : 0.92,
           showBtn:       data.wpt_showBtn         !== undefined ? data.wpt_showBtn        : true,
           labelSize:     data.wpt_labelSize       !== undefined ? data.wpt_labelSize      : 1.0,
+          scaleDot:      data.wpt_scaleDot        !== undefined ? data.wpt_scaleDot       : false,
+          fixColor:      data.wpt_fixColor        !== undefined ? data.wpt_fixColor       : "#3fb950",
+          textColor:     data.wpt_textColor       !== undefined ? data.wpt_textColor      : "#3fb950",
         });
       }
     );
@@ -281,6 +284,9 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     if (msg.settings.opacity !== undefined) updates.wpt_opacity = msg.settings.opacity;
     if (msg.settings.showBtn !== undefined) updates.wpt_showBtn = msg.settings.showBtn;
     if (msg.settings.labelSize !== undefined) updates.wpt_labelSize = msg.settings.labelSize;
+    if (msg.settings.scaleDot !== undefined) updates.wpt_scaleDot = msg.settings.scaleDot;
+    if (msg.settings.fixColor !== undefined) updates.wpt_fixColor = msg.settings.fixColor;
+    if (msg.settings.textColor !== undefined) updates.wpt_textColor = msg.settings.textColor;
     chrome.storage.local.set(updates, () => sendResponse({ ok: true }));
     return true;
   }

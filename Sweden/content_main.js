@@ -21,6 +21,9 @@
     opacity:   0.92,
     showBtn:   true,
     labelSize: 1.0,
+    scaleDot:  false,
+    fixColor:  "#3fb950",
+    textColor: "#3fb950",
   };
 
   // ── State ─────────────────────────────────────────────────────────────────
@@ -49,7 +52,7 @@
         return;
       }
       // Label size only affects rendering, no data reload needed
-      if (msg.key === "labelSize") return;
+      if (msg.key === "labelSize" || msg.key === "scaleDot" || msg.key === "fixColor" || msg.key === "textColor") return;
       lastBbox = null;  // Force re-fetch with new type filters
       loadFixesForView();
       return;
@@ -232,7 +235,10 @@
   }
 
   // ── Drawing ───────────────────────────────────────────────────────────────
-  const COLOR = { airport: "#3fb950", fix: "#3fb950", intersect: "#ffffff", vor: "#58a6ff", ndb: "#f85149" };
+  const DEFAULT_FIX_COLOR = "#3fb950";
+  function getColorMap() {
+    return { airport: Settings.fixColor, fix: Settings.fixColor, intersect: "#ffffff", vor: "#58a6ff", ndb: "#f85149" };
+  }
 
   function drawShape(type, x, y, r) {
     if (type === "vor") {
@@ -283,6 +289,7 @@
     if (zoom < 6) return;
 
     const dpr = window.devicePixelRatio || 1;
+    const COLOR = getColorMap();
     const showLabels = zoom >= 10;
     
     // Scale radius down when zoomed out. Max size reached at zoom >= 10.5.
@@ -293,7 +300,7 @@
     else if (zoom >= 7.5) baseRadius = 2;
     else baseRadius = 1.5;
     
-    const r = baseRadius * dpr;
+    const r = baseRadius * dpr * (Settings.scaleDot ? Settings.labelSize : 1);
 
     let drawn = 0;
     try {
@@ -331,7 +338,7 @@
         
         drawnPixels.add(pxKey);
 
-        const color = COLOR[fix.type] || "#fff";
+        const color = COLOR[fix.type] || Settings.fixColor;
 
         ctx.save();
         ctx.fillStyle = color;
@@ -356,7 +363,7 @@
           let labelY = y + 4 * dpr;
           
           ctx.strokeText(label, labelX, labelY);
-          ctx.fillStyle = color;
+          ctx.fillStyle = (fix.type === "fix" || fix.type === "airport") ? Settings.textColor : color;
           ctx.fillText(label, labelX, labelY);
           
           let w = ctx.measureText(label).width;
@@ -448,7 +455,7 @@
         if (tooltip) {
           const COPY_DURATION = 400; // ms to keep "Copied" visible
           _copiedUntil = Date.now() + COPY_DURATION;
-          const color = COLOR[fix.type] || "#3fb950";
+          const color = getColorMap()[fix.type] || Settings.fixColor;
           tooltip.innerHTML = `<span style="color:${color};font-weight:bold;font-size:14px">Copied ${lowerIdent} to clipboard</span>`;
           tooltip.style.display = "block";
           setTimeout(() => { _copiedUntil = 0; }, COPY_DURATION);
@@ -476,9 +483,10 @@
 
     const fix = getFixNearMouse(e);
     if (fix) {
-      const color = COLOR[fix.type] || "#fff";
+      const dotColor = getColorMap()[fix.type] || Settings.fixColor;
+      const labelColor = (fix.type === "fix" || fix.type === "airport") ? Settings.textColor : dotColor;
       const label = fix.name ? `${fix.ident} (${fix.name})` : fix.ident;
-      tooltip.innerHTML = `<span style="font-size:15px;font-weight:bold;color:${color}">${label}</span>`;
+      tooltip.innerHTML = `<span style="font-size:15px;font-weight:bold;color:${labelColor}">${label}</span>`;
       tooltip.style.display = "block";
       tooltip.style.left = (e.clientX + 16) + "px";
       tooltip.style.top  = (e.clientY - 8) + "px";
@@ -773,6 +781,9 @@
         if (saved.opacity       !== undefined) Settings.opacity       = saved.opacity;
         if (saved.showBtn      !== undefined) Settings.showBtn      = saved.showBtn;
         if (saved.labelSize    !== undefined) Settings.labelSize    = saved.labelSize;
+        if (saved.scaleDot     !== undefined) Settings.scaleDot     = saved.scaleDot;
+        if (saved.fixColor     !== undefined) Settings.fixColor     = saved.fixColor;
+        if (saved.textColor    !== undefined) Settings.textColor    = saved.textColor;
         logMsg("[WPT] Persisted settings restored: " + JSON.stringify(Settings));
       }
     } catch (e) {
