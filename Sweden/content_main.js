@@ -1105,7 +1105,7 @@
       activeBtn.style.background = "#58a6ff";
       activeBtn.style.color = "#0d1117";
       if (m === "rect") bannerText.textContent = "Drag to select";
-      else if (m === "free") bannerText.textContent = "Click to place points \u00b7 Double-click to finish";
+      else if (m === "free") bannerText.textContent = "Click to place points \u00b7 Right-click to finish";
       else bannerText.textContent = "Click center, drag radius";
     }
 
@@ -1249,7 +1249,7 @@
       }
     });
 
-    overlay.addEventListener("dblclick", (e) => {
+    overlay.addEventListener("contextmenu", (e) => {
       if (mode === "free") { e.preventDefault(); finishFreeSelect(); }
     });
 
