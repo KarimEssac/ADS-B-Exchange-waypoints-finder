@@ -95,7 +95,7 @@ async function checkStatus() {
 checkStatus();
 
 // ── Restore saved toggle states ───────────────────────────────────────────────
-chrome.storage.local.get(["wpt_enabled", "wpt_showFixes", "wpt_showIntersects", "wpt_showVors", "wpt_showNdbs", "wpt_opacity", "wpt_showBtn", "wpt_labelSize", "wpt_scaleDot", "wpt_fixColor", "wpt_textColor", "wpt_textSameAsWpt"], (data) => {
+chrome.storage.local.get(["wpt_enabled", "wpt_showFixes", "wpt_showIntersects", "wpt_showVors", "wpt_showNdbs", "wpt_opacity", "wpt_showBtn", "wpt_labelSize", "wpt_scaleDot", "wpt_hlProcs", "wpt_fixColor", "wpt_textColor", "wpt_textSameAsWpt"], (data) => {
   if (data.wpt_enabled !== undefined) {
     togEnabled.checked = data.wpt_enabled;
     updateSubTogglesVisuals(data.wpt_enabled);
@@ -108,6 +108,7 @@ chrome.storage.local.get(["wpt_enabled", "wpt_showFixes", "wpt_showIntersects", 
   if (data.wpt_showBtn !== undefined) togShowBtn.checked = data.wpt_showBtn;
   if (data.wpt_labelSize !== undefined) togLabelSize.value = data.wpt_labelSize;
   if (data.wpt_scaleDot !== undefined) togScaleDot.checked = data.wpt_scaleDot;
+  if (data.wpt_hlProcs  !== undefined) togHlProcs.checked = data.wpt_hlProcs;
   if (data.wpt_fixColor !== undefined) {
     togFixColor.value = data.wpt_fixColor;
     fixColorPreview.style.background = data.wpt_fixColor;
@@ -185,6 +186,7 @@ btnLabelDefault.addEventListener("click", () => {
   sendToggle("labelSize", 1.0);
 });
 togScaleDot.addEventListener("change", () => sendToggle("scaleDot", togScaleDot.checked));
+togHlProcs.addEventListener("change", () => sendToggle("hlProcs", togHlProcs.checked));
 togFixColor.addEventListener("input", () => {
   fixColorPreview.style.background = togFixColor.value;
   sendToggle("fixColor", togFixColor.value);
@@ -420,19 +422,52 @@ async function doSearch(q) {
   }
 }
 
+function getRootProcs(fix) {
+  if (!fix || !fix.procs || !fix.procs.length) return [];
+  return fix.procs.filter(p => {
+    if (!p.proc.startsWith(fix.ident)) return false;
+    const num = p.proc.substring(fix.ident.length).trim();
+    return num.length > 0 && /\d/.test(num);
+  });
+}
+
 function renderResults(fixes) {
   if (!fixes.length) {
     searchResults.innerHTML = `<div class="no-results">No results found</div>`;
     return;
   }
 
+  const hlProcs = togHlProcs.checked;
+  const fixColor = togFixColor.value;
+
   searchResults.innerHTML = fixes.map(f => {
+    let color = f.type === "vor" ? "#58a6ff" : f.type === "ndb" ? "#f85149" : f.type === "airport" ? fixColor : f.type === "intersect" ? "#ffffff" : fixColor;
+    let isMythic = false;
+    let pLabel = f.ident;
+    let pMeta = "";
+
+    const rootProcs = getRootProcs(f);
+
+    if (hlProcs && rootProcs.length > 0) {
+      const hasSid = rootProcs.some(p => p.type === 'SID');
+      color = hasSid ? "#ff9e22" : "#00cfcf";
+      isMythic = true;
+    }
+
+    if (rootProcs.length > 0) {
+      const p = rootProcs[0];
+      const num = p.proc.replace(f.ident, '').trim();
+      pLabel = `${f.ident} ${num}`;
+      pMeta = `<span style="font-size: 10px; margin-left: 4px; color: ${isMythic ? color : '#8b949e'}">- ${p.type}</span>`;
+    }
+
     const nameStr = f.name ? ` <span style="color:#8b949e;font-weight:normal">(${f.name})</span>` : "";
     const airportStr = f.airport ? `<span style="color:#3fb950;font-size:10px;margin-left:5px;background:#0d2b12;border-radius:3px;padding:1px 4px;">${f.airport}</span>` : "";
+    
     return `
     <div class="result-item" data-lat="${f.lat}" data-lon="${f.lon}" data-ident="${f.ident}">
       <div>
-        <div class="result-ident" style="color:${typeColor(f.type)}">${f.ident}${nameStr}${airportStr}</div>
+        <div class="result-ident" style="color:${color}">${pLabel}${pMeta}${nameStr}${airportStr}</div>
         <div class="result-coords">${f.lat.toFixed(4)}° / ${f.lon.toFixed(4)}°</div>
       </div>
       <span class="result-type">${typeLabel(f.type)}</span>

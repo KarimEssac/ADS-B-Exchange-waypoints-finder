@@ -21,7 +21,8 @@
     opacity:   0.92,
     showBtn:   true,
     labelSize: 1.0,
-    scaleDot:  false,
+    scaleDot:  true,
+    hlProcs:   false,
     fixColor:  "#3fb950",
     textColor: "#3fb950",
   };
@@ -62,7 +63,7 @@
         return;
       }
       // Label size only affects rendering, no data reload needed
-      if (msg.key === "labelSize" || msg.key === "scaleDot" || msg.key === "fixColor" || msg.key === "textColor") return;
+      if (msg.key === "labelSize" || msg.key === "scaleDot" || msg.key === "fixColor" || msg.key === "textColor" || msg.key === "hlProcs") return;
       lastBbox = null;  // Force re-fetch with new type filters
       loadFixesForView();
       return;
@@ -252,6 +253,14 @@
   function getColorMap() {
     return { airport: Settings.fixColor, fix: Settings.fixColor, intersect: "#ffffff", vor: "#58a6ff", ndb: "#f85149" };
   }
+  function getRootProcs(fix) {
+    if (!fix || !fix.procs || !fix.procs.length) return [];
+    return fix.procs.filter(p => {
+      if (!p.proc.startsWith(fix.ident)) return false;
+      const num = p.proc.substring(fix.ident.length).trim();
+      return num.length > 0 && /\d/.test(num);
+    });
+  }
   // If a hex color is too dark, return white for readability on dark tooltips
   function readableColor(hex) {
     const c = hex.replace("#", "");
@@ -260,6 +269,15 @@
     const b = parseInt(c.substring(4, 6), 16);
     const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
     return lum < 0.4 ? "#ffffff" : hex;
+  }
+  function isDarkColor(hex) {
+    const c = hex.replace("#", "");
+    if(c.length !== 6) return false;
+    const r = parseInt(c.substring(0, 2), 16);
+    const g = parseInt(c.substring(2, 4), 16);
+    const b = parseInt(c.substring(4, 6), 16);
+    const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return lum < 0.15;
   }
 
   function drawShape(type, x, y, r) {
@@ -360,9 +378,23 @@
         
         drawnPixels.add(pxKey);
 
-        const color = COLOR[fix.type] || Settings.fixColor;
+        let color = COLOR[fix.type] || Settings.fixColor;
+        let isMythic = false;
+
+        const rootProcs = getRootProcs(fix);
+        if (Settings.hlProcs && rootProcs.length > 0) {
+          const hasSid = rootProcs.some(p => p.type === 'SID');
+          color = hasSid ? "#ff9e22" : "#00cfcf"; // Darker red for SID, darker cyan for STAR
+          isMythic = true;
+        }
 
         ctx.save();
+        if (isMythic) {
+          ctx.shadowColor = color;
+          // Pulse the blur between 4px and 14px based on time
+          ctx.shadowBlur = Math.round(9 + 5 * Math.sin(Date.now() / 250)) * dpr;
+        }
+
         ctx.fillStyle = color;
         ctx.strokeStyle = "rgba(0,0,0,0.75)";
         ctx.lineWidth = 1 * dpr;
@@ -371,6 +403,9 @@
         ctx.fill();
         ctx.stroke();
 
+        // Turn off shadow before drawing text so labels remain crisp
+        ctx.shadowBlur = 0;
+
         let labelHit = null;
 
         if (showLabels) {
@@ -378,14 +413,15 @@
           ctx.font = `bold ${fs}px monospace`;
           ctx.globalAlpha = Settings.opacity;
           ctx.lineWidth = 3 * dpr;
-          ctx.strokeStyle = "rgba(0,0,0,0.9)";
+          const labelColor = isMythic ? color : ((fix.type === "fix" || fix.type === "airport") ? Settings.textColor : color);
+          ctx.strokeStyle = isDarkColor(labelColor) ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.9)";
           const label = fix.name ? `${fix.ident} (${fix.name})` : fix.ident;
           
           let labelX = x + r + 3 * dpr;
           let labelY = y + 4 * dpr;
           
           ctx.strokeText(label, labelX, labelY);
-          ctx.fillStyle = (fix.type === "fix" || fix.type === "airport") ? Settings.textColor : color;
+          ctx.fillStyle = labelColor;
           ctx.fillText(label, labelX, labelY);
           
           let w = ctx.measureText(label).width;
@@ -477,7 +513,14 @@
         if (tooltip) {
           const COPY_DURATION = 400; // ms to keep "Copied" visible
           _copiedUntil = Date.now() + COPY_DURATION;
-          const color = getColorMap()[fix.type] || Settings.fixColor;
+          
+          let color = getColorMap()[fix.type] || Settings.fixColor;
+          const rootProcs = getRootProcs(fix);
+          if (Settings.hlProcs && rootProcs.length > 0) {
+            const hasSid = rootProcs.some(p => p.type === 'SID');
+            color = hasSid ? "#ff9e22" : "#00cfcf";
+          }
+          
           tooltip.innerHTML = `<span style="color:${readableColor(color)};font-weight:bold;font-size:14px">Copied ${lowerIdent} to clipboard</span>`;
           tooltip.style.display = "block";
           setTimeout(() => { _copiedUntil = 0; }, COPY_DURATION);
@@ -505,10 +548,29 @@
 
     const fix = getFixNearMouse(e);
     if (fix) {
-      const dotColor = getColorMap()[fix.type] || Settings.fixColor;
-      const labelColor = (fix.type === "fix" || fix.type === "airport") ? Settings.textColor : dotColor;
+      let dotColor = getColorMap()[fix.type] || Settings.fixColor;
+      let isMythic = false;
+
+      const rootProcs = getRootProcs(fix);
+
+      if (Settings.hlProcs && rootProcs.length > 0) {
+        const hasSid = rootProcs.some(p => p.type === 'SID');
+        dotColor = hasSid ? "#ff9e22" : "#00cfcf";
+        isMythic = true;
+      }
+
+      const labelColor = isMythic ? dotColor : ((fix.type === "fix" || fix.type === "airport") ? Settings.textColor : dotColor);
       const label = fix.name ? `${fix.ident} (${fix.name})` : fix.ident;
-      tooltip.innerHTML = `<span style="font-size:15px;font-weight:bold;color:${readableColor(labelColor)}">${label}</span>`;
+      let html = `<span style="font-size:15px;font-weight:bold;color:${readableColor(labelColor)}">${label}</span>`;
+
+      // Show SID/STAR: only the number and type for procedures named after this fix
+      if (rootProcs.length > 0) {
+        const p = rootProcs[0];
+        const num = p.proc.replace(fix.ident, '').trim();
+        html = `<span style="font-size:15px;font-weight:bold;color:${readableColor(labelColor)}">${fix.ident} ${num}</span> <span style="color:${dotColor};font-weight:700;font-size:12px;">- ${p.type}</span>`;
+      }
+
+      tooltip.innerHTML = html;
       tooltip.style.display = "block";
       tooltip.style.left = (e.clientX + 16) + "px";
       tooltip.style.top  = (e.clientY - 8) + "px";
@@ -804,6 +866,7 @@
         if (saved.showBtn      !== undefined) Settings.showBtn      = saved.showBtn;
         if (saved.labelSize    !== undefined) Settings.labelSize    = saved.labelSize;
         if (saved.scaleDot     !== undefined) Settings.scaleDot     = saved.scaleDot;
+        if (saved.hlProcs      !== undefined) Settings.hlProcs      = saved.hlProcs;
         if (saved.fixColor     !== undefined) Settings.fixColor     = saved.fixColor;
         if (saved.textColor    !== undefined) Settings.textColor    = saved.textColor;
         logMsg("[WPT] Persisted settings restored: " + JSON.stringify(Settings));
@@ -1422,7 +1485,15 @@
 
     function getFilteredFixes() {
       const q = searchInput.value.trim().toUpperCase();
-      if (!q) return fixes;
+      if (!q) {
+        // Prioritize SIDs and STARs before generic fixes when no search is active
+        return [...fixes].sort((a, b) => {
+          const aProc = getRootProcs(a).length > 0 ? 1 : 0;
+          const bProc = getRootProcs(b).length > 0 ? 1 : 0;
+          if (aProc !== bProc) return bProc - aProc;
+          return a.ident.localeCompare(b.ident); // alphabetical for ties
+        });
+      }
       const scored = [];
       for (const f of fixes) {
         let sc = soundScore(f.ident, q);
@@ -1454,18 +1525,45 @@
         row.addEventListener("mouseout", () => { row.style.background = i % 2 === 0 ? "#0d1117" : "#161b22"; });
         row.addEventListener("click", () => {
           navigator.clipboard.writeText((fix.name || fix.ident).toLowerCase()).then(() => {
-            identEl.textContent = "\u2713 Copied!";
-            setTimeout(() => { identEl.textContent = fix.ident; }, 800);
+            const originalHTML = identEl.innerHTML;
+            identEl.innerHTML = "\u2713 Copied!";
+            setTimeout(() => { identEl.innerHTML = originalHTML; }, 800);
           });
         });
 
         const dot = document.createElement("div");
-        const c = colorMap[fix.type] || Settings.fixColor;
-        dot.style.cssText = `width:8px; height:8px; border-radius:50%; background:${c}; flex-shrink:0;`;
+        let c = colorMap[fix.type] || Settings.fixColor;
+        let isMythic = false;
+        let pText = "";
+        let pLabel = fix.ident;
+
+        const rootProcs = getRootProcs(fix);
+
+        if (Settings.hlProcs && rootProcs.length > 0) {
+          const hasSid = rootProcs.some(p => p.type === 'SID');
+          c = hasSid ? "#ff9e22" : "#00cfcf";
+          isMythic = true;
+          const p = rootProcs[0];
+          const num = p.proc.replace(fix.ident, '').trim();
+          pLabel = `${fix.ident} ${num}`;
+          pText = ` - ${p.type}`;
+        } else if (!Settings.hlProcs && rootProcs.length > 0) {
+          // If highlighting off, still show the proc number and type to identify it
+          const p = rootProcs[0];
+          const num = p.proc.replace(fix.ident, '').trim();
+          pLabel = `${fix.ident} ${num}`;
+          pText = ` - ${p.type}`;
+        }
+
+        dot.style.cssText = `width:8px; height:8px; border-radius:50%; background:${c}; flex-shrink:0;${isMythic ? ` box-shadow: 0 0 5px ${c};` : ""}`;
         row.appendChild(dot);
 
         const identEl = document.createElement("span");
-        identEl.textContent = fix.ident;
+        if (pText) {
+          identEl.innerHTML = `<span>${pLabel}</span><span style="font-size: 10px; margin-left: 4px; color: ${isMythic ? c : '#8b949e'};">${pText}</span>`;
+        } else {
+          identEl.textContent = fix.ident;
+        }
         identEl.style.cssText = `font-weight:700; font-size:12px; color:${c}; min-width: 50px;`;
         row.appendChild(identEl);
 

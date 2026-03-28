@@ -5,14 +5,15 @@
 importScripts("fflate.js", "sound_map.js");
 
 // ─── State ────────────────────────────────────────────────────────────────────
-let FIXES = [];          // [{ident, lat, lon, type}]
+let FIXES = [];          // [{ident, lat, lon, type, name, airport, procs}]
+let FIX_PROCS = new Map(); // ident → [{proc, type:"SID"|"STAR", airport}]
 let READY = false;
 let LOADING = false;     // prevent double-loading
 
 // ─── IndexedDB caching ────────────────────────────────────────────────────────
 const DB_NAME = "AdsbWptCache";
 const STORE_NAME = "fixes";
-const CACHE_VERSION = 11; // Bumped: worldwide data — removed US-only filters
+const CACHE_VERSION = 13; // Bumped: fixed SID/STAR procedure parsing (pos 12, not pos 5)
 
 function openDb() {
   return new Promise((resolve, reject) => {
@@ -159,6 +160,36 @@ function parseCifp(text) {
   const lines = text.split(/\r?\n/);
   let count = 0;
 
+  // First pass: build fix → procedure index from SID (D) and STAR (E) records
+  FIX_PROCS.clear();
+  for (const line of lines) {
+    if (!line.startsWith("S")) continue;
+    if (line[4] !== 'P') continue;
+    // Position 12 holds procedure type: D = SID, E = STAR
+    const procType = line[12];
+    if (procType !== 'D' && procType !== 'E') continue;
+    const typeLabel = procType === 'D' ? 'SID' : 'STAR';
+    const airport = line.substring(6, 10).trim();
+    const procCode = line.substring(13, 19).trim(); // e.g. "DIDLY5", "BEREE3"
+    if (!procCode || procCode.length < 2) continue;
+    const fixIdent = line.substring(29, 34).trim();
+    if (!fixIdent || fixIdent.length < 2) continue;
+    if (/^\d/.test(fixIdent) || fixIdent.startsWith("RW")) continue;
+    if (!/^[A-Z][A-Z0-9]{1,4}$/.test(fixIdent)) continue;
+
+    // Parse display name: "DIDLY5" → "DIDLY 5", "BEREE3" → "BEREE 3"
+    const pm = procCode.match(/^([A-Z]+)(\d+)$/);
+    const displayName = pm ? `${pm[1]} ${pm[2]}` : procCode;
+
+    if (!FIX_PROCS.has(fixIdent)) FIX_PROCS.set(fixIdent, []);
+    const arr = FIX_PROCS.get(fixIdent);
+    // Avoid duplicates
+    if (!arr.some(p => p.proc === displayName && p.type === typeLabel && p.airport === airport)) {
+      arr.push({ proc: displayName, type: typeLabel, airport });
+    }
+  }
+  console.log(`[WPT] Built procedure index: ${FIX_PROCS.size} fixes have SID/STAR info`);
+
   for (const line of lines) {
     // Process all CIFP records (S prefix = standard record)
     if (!line.startsWith("S")) continue;
@@ -224,7 +255,10 @@ function parseCifp(text) {
         identCoords.set(ident, [{ lat, lon }]);
       }
 
-      FIXES.push({ ident, lat, lon, type, name, airport });
+      // Attach procedure info if available
+      const procs = FIX_PROCS.get(ident) || undefined;
+
+      FIXES.push({ ident, lat, lon, type, name, airport, procs });
       count++;
     } catch (_) {}
   }
@@ -258,7 +292,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
   if (msg.type === "GET_SETTINGS") {
     chrome.storage.local.get(
-      ["wpt_enabled", "wpt_showFixes", "wpt_showIntersects", "wpt_showVors", "wpt_showNdbs", "wpt_opacity", "wpt_showBtn", "wpt_labelSize", "wpt_scaleDot", "wpt_fixColor", "wpt_textColor"],
+      ["wpt_enabled", "wpt_showFixes", "wpt_showIntersects", "wpt_showVors", "wpt_showNdbs", "wpt_opacity", "wpt_showBtn", "wpt_labelSize", "wpt_scaleDot", "wpt_hlProcs", "wpt_fixColor", "wpt_textColor"],
       (data) => {
         sendResponse({
           enabled:       data.wpt_enabled       !== undefined ? data.wpt_enabled       : true,
@@ -270,6 +304,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           showBtn:       data.wpt_showBtn         !== undefined ? data.wpt_showBtn        : true,
           labelSize:     data.wpt_labelSize       !== undefined ? data.wpt_labelSize      : 1.0,
           scaleDot:      data.wpt_scaleDot        !== undefined ? data.wpt_scaleDot       : false,
+          hlProcs:       data.wpt_hlProcs         !== undefined ? data.wpt_hlProcs        : false,
           fixColor:      data.wpt_fixColor        !== undefined ? data.wpt_fixColor       : "#3fb950",
           textColor:     data.wpt_textColor       !== undefined ? data.wpt_textColor      : "#3fb950",
         });
@@ -368,7 +403,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     if (!q) {
       // No search query — return all fixes for this airport
       const result = airportFixes.slice(0, 100).map(f => ({
-        ident: f.ident, lat: f.lat, lon: f.lon, type: f.type, name: f.name
+        ident: f.ident, lat: f.lat, lon: f.lon, type: f.type, name: f.name, procs: f.procs
       }));
       sendResponse({ fixes: result, count: airportFixes.length });
       return true;
@@ -387,7 +422,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     scored.sort((a, b) => b.score - a.score);
     const result = scored.slice(0, 50).map(s => ({
       ident: s.fix.ident, lat: s.fix.lat, lon: s.fix.lon,
-      type: s.fix.type, name: s.fix.name
+      type: s.fix.type, name: s.fix.name, procs: s.fix.procs
     }));
     sendResponse({ fixes: result, count: airportFixes.length });
     return true;
