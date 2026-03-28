@@ -53,14 +53,14 @@
         if (btn) {
           // Only restore if user has showBtn enabled
           if (msg.value) btn.style.display = "none";
-          else btn.style.display = Settings.showBtn === false ? "none" : "";
+          else btn.style.display = Settings.showBtn === false ? "none" : "flex";
         }
         return;
       }
       // Handle quick-access button visibility
       if (msg.key === "showBtn") {
         const btn = document.getElementById("wpt-quick-access-btn");
-        if (btn) btn.style.display = msg.value ? "" : "none";
+        if (btn) btn.style.display = msg.value ? "flex" : "none";
         return;
       }
       // Label size only affects rendering, no data reload needed
@@ -617,7 +617,7 @@
       if (rootProcs.length > 0) {
         const p = rootProcs[0];
         const num = p.proc.replace(fix.ident, '').trim();
-        html = `<span style="font-size:15px;font-weight:bold;color:${readableColor(labelColor)}">${fix.ident} ${num}</span> <span style="color:${dotColor};font-weight:700;font-size:12px;">- ${p.type}</span>`;
+        html = `<span style="font-size:15px;font-weight:bold;color:${readableColor(labelColor)}">${fix.ident} ${num}</span> <span style="color:${dotColor};font-weight:700;font-size:15px;">- ${p.type}</span>`;
       }
 
       tooltip.innerHTML = html;
@@ -929,7 +929,7 @@
   function createQuickAccessButton() {
     const btn = document.createElement("div");
     btn.id = "wpt-quick-access-btn";
-    btn.innerText = "ADSB Waypoints Settings";
+    btn.innerText = "Sweden Settings";
     btn.style.position = "fixed";
     
     // Restore saved position or use default
@@ -948,11 +948,15 @@
     }
 
     btn.style.zIndex = "999999";
-    btn.style.background = "#1f6feb";
+    btn.style.background = "linear-gradient(135deg, #161b22, #1c2333)";
     btn.style.color = "#ffffff";
-    btn.style.padding = "10px 16px";
+    btn.style.width = "215px";
+    btn.style.height = "38px";
+    btn.style.display = "flex";
+    btn.style.alignItems = "center";
+    btn.style.justifyContent = "center";
     btn.style.borderRadius = "8px";
-    btn.style.border = "1px solid #58a6ff";
+    btn.style.border = "1px solid #30363d";
     btn.style.cursor = "pointer";
     btn.style.fontFamily = "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
     btn.style.fontSize = "14px";
@@ -962,10 +966,10 @@
     btn.style.userSelect = "none";
     
     btn.addEventListener("mouseover", () => {
-      btn.style.background = "#388bfd";
+      btn.style.background = "linear-gradient(135deg, #21262d, #272f44)";
     });
     btn.addEventListener("mouseout", () => {
-      btn.style.background = "#1f6feb";
+      btn.style.background = "linear-gradient(135deg, #161b22, #1c2333)";
     });
 
     let isDragging = false;
@@ -1371,7 +1375,7 @@
         overlay.remove();
         document.removeEventListener("keydown", onKey);
         const qab2 = document.getElementById("wpt-quick-access-btn");
-        if (qab2) qab2.style.display = "";
+        if (qab2) qab2.style.display = "flex";
         bgRequest({ type: "OPEN_POPUP" }).catch(() => {});
       }
     };
@@ -1455,7 +1459,7 @@
     closeBtn.addEventListener("click", () => {
       panel.remove();
       const qab4 = document.getElementById("wpt-quick-access-btn");
-      if (qab4) qab4.style.display = "";
+      if (qab4) qab4.style.display = "flex";
       bgRequest({ type: "OPEN_POPUP" }).catch(() => {});
     });
     header.appendChild(closeBtn);
