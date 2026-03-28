@@ -495,6 +495,30 @@ function renderResults(fixes) {
       }
       window.close();
     });
+
+    // Highlight waypoint on map when hovering search result
+    el.addEventListener("mouseenter", async () => {
+      try {
+        const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+        if (!tabs[0]) return;
+        chrome.tabs.sendMessage(tabs[0].id, {
+          __wpt_source: "popup",
+          type: "WPT_HIGHLIGHT",
+          ident: el.dataset.ident
+        }).catch(() => {});
+      } catch (e) {}
+    });
+    el.addEventListener("mouseleave", async () => {
+      try {
+        const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+        if (!tabs[0]) return;
+        chrome.tabs.sendMessage(tabs[0].id, {
+          __wpt_source: "popup",
+          type: "WPT_HIGHLIGHT",
+          ident: null
+        }).catch(() => {});
+      } catch (e) {}
+    });
   });
 }
 

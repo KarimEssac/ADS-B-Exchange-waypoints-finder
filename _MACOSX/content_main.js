@@ -35,6 +35,7 @@
   let tooltip = null;
   let lastBbox = null;
   let loadTimer = null;
+  let _highlightIdent = null;  // ident string to glow on map (set by popup hover)
 
   // ── Bridge: page <-> extension content script ─────────────────────────────
   let _reqId = 0;
@@ -83,6 +84,10 @@
     }
     if (msg.type === "WPT_START_SELECTION") {
       startAreaSelection();
+      return;
+    }
+    if (msg.type === "WPT_HIGHLIGHT") {
+      _highlightIdent = msg.ident || null;
       return;
     }
 
@@ -395,13 +400,58 @@
           ctx.shadowBlur = Math.round(9 + 5 * Math.sin(Date.now() / 250)) * dpr;
         }
 
-        ctx.fillStyle = color;
+        // Search-result hover highlight: bright pulsing shadow
+        const isHighlighted = _highlightIdent && fix.ident === _highlightIdent;
+        if (isHighlighted) {
+          ctx.shadowColor = "#ffffff";
+          ctx.shadowBlur = Math.round(15 + 10 * Math.sin(Date.now() / 150)) * dpr;
+        }
+
+        ctx.fillStyle = isHighlighted ? "#ffffff" : color; // make the core pop white
         ctx.strokeStyle = "rgba(0,0,0,0.75)";
         ctx.lineWidth = 1 * dpr;
         ctx.globalAlpha = Settings.opacity;
+
+        // Keep standard size
         drawShape(fix.type, x, y, r);
         ctx.fill();
         ctx.stroke();
+
+        if (isHighlighted) {
+          // Radar ping/ripple effect
+          const time = Date.now();
+          const duration = 1200;
+          const p1 = (time % duration) / duration; 
+          const p2 = ((time + (duration/2)) % duration) / duration; 
+
+          ctx.shadowBlur = 0; // Turn off shadow for the crisp ripples
+
+          ctx.beginPath();
+          ctx.arc(x, y, r + (25 * dpr * p1), 0, Math.PI * 2);
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 2 * dpr;
+          ctx.globalAlpha = 1 - p1;
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.arc(x, y, r + (25 * dpr * p2), 0, Math.PI * 2);
+          ctx.globalAlpha = 1 - p2;
+          ctx.stroke();
+
+          // Animated crosshairs
+          ctx.beginPath();
+          const crossSize = 12 * dpr;
+          ctx.moveTo(x - crossSize, y);
+          ctx.lineTo(x + crossSize, y);
+          ctx.moveTo(x, y - crossSize);
+          ctx.lineTo(x, y + crossSize);
+          ctx.strokeStyle = "#ffffff";
+          ctx.lineWidth = 1.5 * dpr;
+          ctx.globalAlpha = 0.4 + 0.4 * Math.sin(time / 200);
+          ctx.stroke();
+
+          ctx.globalAlpha = Settings.opacity;
+        }
 
         // Turn off shadow before drawing text so labels remain crisp
         ctx.shadowBlur = 0;
@@ -1521,8 +1571,14 @@
           cursor: pointer; transition: background 0.15s;
           ${i % 2 === 0 ? "background: #0d1117;" : "background: #161b22;"}
         `;
-        row.addEventListener("mouseover", () => { row.style.background = "#21262d"; });
-        row.addEventListener("mouseout", () => { row.style.background = i % 2 === 0 ? "#0d1117" : "#161b22"; });
+        row.addEventListener("mouseover", () => { 
+          row.style.background = "#21262d"; 
+          _highlightIdent = fix.ident;
+        });
+        row.addEventListener("mouseout", () => { 
+          row.style.background = i % 2 === 0 ? "#0d1117" : "#161b22"; 
+          if (_highlightIdent === fix.ident) _highlightIdent = null;
+        });
         row.addEventListener("click", () => {
           navigator.clipboard.writeText((fix.name || fix.ident).toLowerCase()).then(() => {
             const originalHTML = identEl.innerHTML;

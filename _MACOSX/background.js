@@ -303,7 +303,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           opacity:       data.wpt_opacity        !== undefined ? data.wpt_opacity       : 0.92,
           showBtn:       data.wpt_showBtn         !== undefined ? data.wpt_showBtn        : true,
           labelSize:     data.wpt_labelSize       !== undefined ? data.wpt_labelSize      : 1.0,
-          scaleDot:      data.wpt_scaleDot        !== undefined ? data.wpt_scaleDot       : false,
+          scaleDot:      data.wpt_scaleDot        !== undefined ? data.wpt_scaleDot       : true,
           hlProcs:       data.wpt_hlProcs         !== undefined ? data.wpt_hlProcs        : false,
           fixColor:      data.wpt_fixColor        !== undefined ? data.wpt_fixColor       : "#3fb950",
           textColor:     data.wpt_textColor       !== undefined ? data.wpt_textColor      : "#3fb950",
