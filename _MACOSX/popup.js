@@ -24,6 +24,7 @@ const togTextSameAsWpt = document.getElementById("togTextSameAsWpt");
 const btnVisualSettings = document.getElementById("btnVisualSettings");
 const visualSettingsModal = document.getElementById("visualSettingsModal");
 const btnCloseVisual = document.getElementById("btnCloseVisual");
+const togHidePopup = document.getElementById("togHidePopup");
 
 // ── Hide/show quick-access button with popup lifecycle ──────────────────────
 // Use a port — Chrome auto-disconnects when the popup closes for any reason
@@ -69,7 +70,7 @@ async function ensureContentScripts(tabId) {
       // Give the bridge a moment to inject content_main.js
       await new Promise(r => setTimeout(r, 500));
     } catch (e) {
-      console.warn("[WPT] Cannot inject content script:", e);
+      /* console.warn("[WPT] Cannot inject content script:", e); */
     }
   }
 }
@@ -95,7 +96,7 @@ async function checkStatus() {
 checkStatus();
 
 // ── Restore saved toggle states ───────────────────────────────────────────────
-chrome.storage.local.get(["wpt_enabled", "wpt_showFixes", "wpt_showIntersects", "wpt_showVors", "wpt_showNdbs", "wpt_opacity", "wpt_showBtn", "wpt_labelSize", "wpt_scaleDot", "wpt_hlProcs", "wpt_fixColor", "wpt_textColor", "wpt_textSameAsWpt"], (data) => {
+chrome.storage.local.get(["wpt_enabled", "wpt_showFixes", "wpt_showIntersects", "wpt_showVors", "wpt_showNdbs", "wpt_opacity", "wpt_showBtn", "wpt_labelSize", "wpt_scaleDot", "wpt_hlProcs", "wpt_hidePopup", "wpt_fixColor", "wpt_textColor", "wpt_textSameAsWpt"], (data) => {
   if (data.wpt_enabled !== undefined) {
     togEnabled.checked = data.wpt_enabled;
     updateSubTogglesVisuals(data.wpt_enabled);
@@ -109,6 +110,7 @@ chrome.storage.local.get(["wpt_enabled", "wpt_showFixes", "wpt_showIntersects", 
   if (data.wpt_labelSize !== undefined) togLabelSize.value = data.wpt_labelSize;
   if (data.wpt_scaleDot !== undefined) togScaleDot.checked = data.wpt_scaleDot;
   if (data.wpt_hlProcs  !== undefined) togHlProcs.checked = data.wpt_hlProcs;
+  if (data.wpt_hidePopup !== undefined) togHidePopup.checked = data.wpt_hidePopup;
   if (data.wpt_fixColor !== undefined) {
     togFixColor.value = data.wpt_fixColor;
     fixColorPreview.style.background = data.wpt_fixColor;
@@ -156,7 +158,7 @@ async function sendToggle(key, value) {
       value
     }).catch(() => {}); // Silently ignore if still can't connect
   } catch (e) {
-    console.warn("[WPT] Toggle send error:", e);
+    /* console.warn("[WPT] Toggle send error:", e); */
   }
 }
 
@@ -187,6 +189,7 @@ btnLabelDefault.addEventListener("click", () => {
 });
 togScaleDot.addEventListener("change", () => sendToggle("scaleDot", togScaleDot.checked));
 togHlProcs.addEventListener("change", () => sendToggle("hlProcs", togHlProcs.checked));
+togHidePopup.addEventListener("change", () => sendToggle("hidePopup", togHidePopup.checked));
 togFixColor.addEventListener("input", () => {
   fixColorPreview.style.background = togFixColor.value;
   sendToggle("fixColor", togFixColor.value);
@@ -238,7 +241,7 @@ btnSelectArea.addEventListener("click", async () => {
     // Small delay to ensure message is dispatched before popup closes
     setTimeout(() => window.close(), 150);
   } catch (e) {
-    console.error("[WPT] Failed to start area selection:", e);
+    /* console.error("[WPT] Failed to start area selection:", e); */
   }
 });
 btnSelectArea.addEventListener("mouseover", () => {
@@ -491,7 +494,7 @@ function renderResults(fixes) {
           zoom: 12
         }).catch(() => {});
       } catch (e) {
-        console.warn("[WPT] FlyTo error:", e);
+        /* console.warn("[WPT] FlyTo error:", e); */
       }
       window.close();
     });

@@ -4,16 +4,16 @@
 (function () {
   if (window.__adsbWptBridgeInstalled) return;
   window.__adsbWptBridgeInstalled = true;
-  console.log("[WPT] Bridge installed");
+  /* console.log("[WPT] Bridge installed"); */
 
   // ── Inject content_main.js into MAIN world (so it can access OLMap / ol) ──
   // We ask the background script to do this via chrome.scripting to bypass CSP blocks
   chrome.runtime.sendMessage({ type: "INJECT_MAIN_SCRIPT" })
     .then(() => {
-      console.log("[WPT] Background reported successful MAIN injection.");
+      /* console.log("[WPT] Background reported successful MAIN injection."); */
     })
     .catch(e => {
-      console.error("[WPT] Failed requesting main script injection:", e);
+      /* console.error("[WPT] Failed requesting main script injection:", e); */
     });
 
   // ── PAGE → BACKGROUND: relay bgRequest messages ───────────────────────────

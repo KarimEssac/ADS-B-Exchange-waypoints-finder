@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Sweden",
   "version": "2.0",
-  "description": "Overlay USA waypoints, fixes, VORs, and NDBs on ADS-B Exchange map",
+  "description": "Overlay waypoints, fixes, VORs, and NDBs on ADS-B Exchange map",
   "permissions": ["storage", "scripting", "activeTab", "tabs"],
   "host_permissions": [
     "https://globe.adsbexchange.com/*"

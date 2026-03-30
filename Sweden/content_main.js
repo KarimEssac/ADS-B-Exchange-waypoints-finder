@@ -7,8 +7,9 @@
   window.__adsbWptMainInstalled = true;
 
   // ── Logging (console only) ─────────────────────────────────────────────────
+  console.log("%cSweden Injected", "color: #00ff00; font-weight: bold; font-size: 14px;");
   function logMsg(msg, isErr = false) {
-    console[isErr ? "error" : "log"](msg);
+    // Suppressed per user request
   }
 
   // ── Settings ──────────────────────────────────────────────────────────────
@@ -23,6 +24,7 @@
     labelSize: 1.0,
     scaleDot:  true,
     hlProcs:   false,
+    hidePopup: false,
     fixColor:  "#3fb950",
     textColor: "#3fb950",
   };
@@ -64,7 +66,7 @@
         return;
       }
       // Label size only affects rendering, no data reload needed
-      if (msg.key === "labelSize" || msg.key === "scaleDot" || msg.key === "fixColor" || msg.key === "textColor" || msg.key === "hlProcs") return;
+      if (msg.key === "labelSize" || msg.key === "scaleDot" || msg.key === "fixColor" || msg.key === "textColor" || msg.key === "hlProcs" || msg.key === "hidePopup") return;
       lastBbox = null;  // Force re-fetch with new type filters
       loadFixesForView();
       return;
@@ -243,12 +245,9 @@
 
     // Tooltip detection — listen on the container without blocking map interactions
     container.addEventListener("mousemove", onMouseMove, { passive: true });
-    // Use capture phase so we intercept clicks on waypoints BEFORE ADS-B's handlers.
-    // OpenLayers uses pointerdown/mousedown for map interactions (flight select/deselect),
-    // so we must block those too when the cursor is over a waypoint.
+    // Use capture phase so we can still detect waypoint clicks for copy-to-clipboard,
+    // but we never block propagation — aircraft clicks always pass through.
     container.addEventListener("click", onClick, { capture: true });
-    container.addEventListener("pointerdown", onPointerBlock, { capture: true });
-    container.addEventListener("mousedown", onPointerBlock, { capture: true });
 
     logMsg("[WPT] Overlay canvas ready: " + canvas.width + "x" + canvas.height);
   }
@@ -511,10 +510,12 @@
     const container = canvas ? canvas.parentElement : null;
     if (!container) return null;
 
-    // Yield priority to flights: tar1090 sets pointer cursor on the viewport
-    // or internal canvas when hovering over an aircraft. If a flight is hovered, ignore waypoints.
-    if (container.style.cursor === 'pointer') return null;
-    if (e.target && window.getComputedStyle(e.target).cursor === 'pointer') return null;
+    // Yield priority to flights: check if tar1090's own hover popup is visible
+    const hlBlock = document.getElementById('highlighted_infoblock');
+    if (hlBlock && hlBlock.style.display !== 'none') {
+      // The aircraft hover popup is currently visible on screen
+      return null;
+    }
 
     const rect = container.getBoundingClientRect();
     const dpr = window.devicePixelRatio || 1;
@@ -540,27 +541,13 @@
 
   let _copiedUntil = 0; // timestamp — tooltip is locked while Date.now() < _copiedUntil
 
-  // Block pointer/mouse-down events from reaching ADS-B when over a waypoint
-  function onPointerBlock(e) {
-    const fix = getFixNearMouse(e);
-    if (fix) {
-      e.stopPropagation();
-      e.stopImmediatePropagation();
-      e.preventDefault();
-    }
-  }
-
   function onClick(e) {
     const fix = getFixNearMouse(e);
     if (fix) {
-      // Stop the click from reaching ADS-B's handlers (preserves flight tracking)
-      e.stopPropagation();
-      e.stopImmediatePropagation();
-      e.preventDefault();
-
+      // Don't block propagation — let ADS-B handle aircraft clicks normally
       const lowerIdent = (fix.name || fix.ident).toLowerCase();
       navigator.clipboard.writeText(lowerIdent).then(() => {
-        if (tooltip) {
+        if (tooltip && !Settings.hidePopup) {
           const COPY_DURATION = 400; // ms to keep "Copied" visible
           _copiedUntil = Date.now() + COPY_DURATION;
           
@@ -597,7 +584,7 @@
     if (Date.now() < _copiedUntil) return;
 
     const fix = getFixNearMouse(e);
-    if (fix) {
+    if (fix && !Settings.hidePopup) {
       let dotColor = getColorMap()[fix.type] || Settings.fixColor;
       let isMythic = false;
 
@@ -917,6 +904,7 @@
         if (saved.labelSize    !== undefined) Settings.labelSize    = saved.labelSize;
         if (saved.scaleDot     !== undefined) Settings.scaleDot     = saved.scaleDot;
         if (saved.hlProcs      !== undefined) Settings.hlProcs      = saved.hlProcs;
+        if (saved.hidePopup    !== undefined) Settings.hidePopup    = saved.hidePopup;
         if (saved.fixColor     !== undefined) Settings.fixColor     = saved.fixColor;
         if (saved.textColor    !== undefined) Settings.textColor    = saved.textColor;
         logMsg("[WPT] Persisted settings restored: " + JSON.stringify(Settings));

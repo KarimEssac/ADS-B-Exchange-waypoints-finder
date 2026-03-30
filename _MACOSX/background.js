@@ -110,18 +110,18 @@ async function loadCifp() {
 
   try {
     // 1. Try loading from IndexedDB cache first (fast path for SW restarts)
-    console.log("[WPT] Checking IndexedDB cache...");
+    /* console.log("[WPT] Checking IndexedDB cache..."); */
     const cached = await loadFixesFromCache();
     if (cached && cached.length > 0) {
       FIXES = cached;
       READY = true;
       LOADING = false;
-      console.log(`[WPT] Loaded ${FIXES.length} fixes from cache`);
+      /* console.log(`[WPT] Loaded ${FIXES.length} fixes from cache`); */
       return;
     }
 
     // 2. Parse from cifp.zip
-    console.log("[WPT] No cache found, loading cifp.zip...");
+    /* console.log("[WPT] No cache found, loading cifp.zip..."); */
     const url = chrome.runtime.getURL("cifp.zip");
     const res = await fetch(url);
     if (!res.ok) throw new Error("fetch failed: " + res.status);
@@ -138,17 +138,17 @@ async function loadCifp() {
 
     const rawData = files[cifpName];
     const text = new TextDecoder("utf-8").decode(rawData);
-    console.log("[WPT] CIFP loaded, length:", text.length);
+    /* console.log("[WPT] CIFP loaded, length:", text.length); */
 
     parseCifp(text);
 
     // 3. Cache parsed fixes to IndexedDB
-    console.log("[WPT] Saving to IndexedDB cache...");
+    /* console.log("[WPT] Saving to IndexedDB cache..."); */
     await saveFixes(FIXES);
-    console.log("[WPT] Cache saved successfully");
+    /* console.log("[WPT] Cache saved successfully"); */
 
   } catch (e) {
-    console.error("[WPT] Failed to load CIFP:", e);
+    /* console.error("[WPT] Failed to load CIFP:", e); */
   } finally {
     LOADING = false;
   }
@@ -188,7 +188,7 @@ function parseCifp(text) {
       arr.push({ proc: displayName, type: typeLabel, airport });
     }
   }
-  console.log(`[WPT] Built procedure index: ${FIX_PROCS.size} fixes have SID/STAR info`);
+  /* console.log(`[WPT] Built procedure index: ${FIX_PROCS.size} fixes have SID/STAR info`); */
 
   for (const line of lines) {
     // Process all CIFP records (S prefix = standard record)
@@ -264,7 +264,7 @@ function parseCifp(text) {
   }
 
   READY = true;
-  console.log(`[WPT] Parsed ${count} fixes/waypoints from CIFP`);
+  /* console.log(`[WPT] Parsed ${count} fixes/waypoints from CIFP`); */
 }
 
 // ─── Start loading immediately ────────────────────────────────────────────────
@@ -280,10 +280,10 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         files: ["content_main.js"],
         world: "MAIN"
       }).then(() => {
-        console.log(`[WPT] Injected content_main.js into MAIN world on tab ${sender.tab.id}`);
+        /* console.log(`[WPT] Injected content_main.js into MAIN world on tab ${sender.tab.id}`); */
         sendResponse({ ok: true });
       }).catch(err => {
-        console.error(`[WPT] Injection failed:`, err);
+        /* console.error(`[WPT] Injection failed:`, err); */
         sendResponse({ ok: false, error: String(err) });
       });
       return true; // async response
@@ -292,7 +292,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
   if (msg.type === "GET_SETTINGS") {
     chrome.storage.local.get(
-      ["wpt_enabled", "wpt_showFixes", "wpt_showIntersects", "wpt_showVors", "wpt_showNdbs", "wpt_opacity", "wpt_showBtn", "wpt_labelSize", "wpt_scaleDot", "wpt_hlProcs", "wpt_fixColor", "wpt_textColor"],
+      ["wpt_enabled", "wpt_showFixes", "wpt_showIntersects", "wpt_showVors", "wpt_showNdbs", "wpt_opacity", "wpt_showBtn", "wpt_labelSize", "wpt_scaleDot", "wpt_hlProcs", "wpt_hidePopup", "wpt_fixColor", "wpt_textColor"],
       (data) => {
         sendResponse({
           enabled:       data.wpt_enabled       !== undefined ? data.wpt_enabled       : true,
@@ -305,6 +305,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           labelSize:     data.wpt_labelSize       !== undefined ? data.wpt_labelSize      : 1.0,
           scaleDot:      data.wpt_scaleDot        !== undefined ? data.wpt_scaleDot       : true,
           hlProcs:       data.wpt_hlProcs         !== undefined ? data.wpt_hlProcs        : false,
+          hidePopup:     data.wpt_hidePopup       !== undefined ? data.wpt_hidePopup      : false,
           fixColor:      data.wpt_fixColor        !== undefined ? data.wpt_fixColor       : "#3fb950",
           textColor:     data.wpt_textColor       !== undefined ? data.wpt_textColor      : "#3fb950",
         });
@@ -430,7 +431,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.type === "OPEN_POPUP") {
     if (chrome.action && chrome.action.openPopup) {
       chrome.action.openPopup().then(() => sendResponse({ ok: true })).catch(err => {
-        console.error("[WPT] Could not open popup:", err);
+        /* console.error("[WPT] Could not open popup:", err); */
         sendResponse({ ok: false, error: String(err) });
       });
     } else {
