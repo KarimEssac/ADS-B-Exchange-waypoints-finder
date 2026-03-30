@@ -245,9 +245,16 @@
 
     // Tooltip detection — listen on the container without blocking map interactions
     container.addEventListener("mousemove", onMouseMove, { passive: true });
-    // Use capture phase so we can still detect waypoint clicks for copy-to-clipboard,
-    // but we never block propagation — aircraft clicks always pass through.
+    // Use capture phase so we can detect waypoint clicks for copy-to-clipboard.
+    // We block propagation of click, pointerdown, and pointerup to prevent OpenLayers
+    // from deselecting the current aircraft when clicking our custom waypoints.
     container.addEventListener("click", onClick, { capture: true });
+    
+    const blockPointer = (e) => {
+      if (getFixNearMouse(e)) e.stopPropagation();
+    };
+    container.addEventListener("pointerdown", blockPointer, { capture: true });
+    container.addEventListener("mousedown", blockPointer, { capture: true });
 
     logMsg("[WPT] Overlay canvas ready: " + canvas.width + "x" + canvas.height);
   }
@@ -544,7 +551,11 @@
   function onClick(e) {
     const fix = getFixNearMouse(e);
     if (fix) {
-      // Don't block propagation — let ADS-B handle aircraft clicks normally
+      // Block propagation so ADS-B Exchange doesn't deselect the current aircraft.
+      // Since getFixNearMouse yields priority to visually highlighted aircraft,
+      // this only blocks clicks if the user explicitly clicked our waypoint.
+      e.stopPropagation();
+
       const lowerIdent = (fix.name || fix.ident).toLowerCase();
       navigator.clipboard.writeText(lowerIdent).then(() => {
         if (tooltip && !Settings.hidePopup) {
