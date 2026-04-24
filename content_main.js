@@ -697,6 +697,92 @@
         ctx.restore();
         drawn++;
       }
+
+      // Draw highlighted nearby airport to ensure glowing effect triggers even if not in allFixes
+      if (_highlightIdent && typeof _nearbyAirports !== 'undefined' && _nearbyAirports.length > 0) {
+        const highlightedNearby = _nearbyAirports.find(a => a.icao === _highlightIdent);
+        if (highlightedNearby) {
+          const pt = latLonToPixel(highlightedNearby.lat, highlightedNearby.lon);
+          if (pt && pt.x >= -30 && pt.x <= canvas.width + 30 && pt.y >= -30 && pt.y <= canvas.height + 30) {
+            const x = pt.x;
+            const y = pt.y;
+            const color = COLOR["airport"] || Settings.fixColor || "#c9d1d9";
+            
+            ctx.save();
+            ctx.shadowColor = "#ffffff";
+            ctx.shadowBlur = Math.round(15 + 10 * Math.sin(Date.now() / 150)) * dpr;
+            ctx.fillStyle = "#ffffff"; // core pops white
+            ctx.strokeStyle = "rgba(0,0,0,0.75)";
+            ctx.lineWidth = 1 * dpr;
+            ctx.globalAlpha = Settings.opacity;
+            
+            if (typeof drawShape === "function") {
+               drawShape("airport", x, y, r);
+            } else {
+               ctx.beginPath();
+               ctx.arc(x, y, r, 0, Math.PI * 2);
+            }
+            ctx.fill();
+            ctx.stroke();
+
+            // Radar ping/ripple effect
+            const time = Date.now();
+            const duration = 1200;
+            const p1 = (time % duration) / duration; 
+            const p2 = ((time + (duration/2)) % duration) / duration; 
+
+            ctx.shadowBlur = 0; // Turn off shadow for the crisp ripples
+
+            ctx.beginPath();
+            ctx.arc(x, y, r + (25 * dpr * p1), 0, Math.PI * 2);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2 * dpr;
+            ctx.globalAlpha = 1 - p1;
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.arc(x, y, r + (25 * dpr * p2), 0, Math.PI * 2);
+            ctx.globalAlpha = 1 - p2;
+            ctx.stroke();
+
+            // Animated crosshairs
+            ctx.beginPath();
+            const crossSize = 12 * dpr;
+            ctx.moveTo(x - crossSize, y);
+            ctx.lineTo(x + crossSize, y);
+            ctx.moveTo(x, y - crossSize);
+            ctx.lineTo(x, y + crossSize);
+            ctx.strokeStyle = "#ffffff";
+            ctx.lineWidth = 1.5 * dpr;
+            ctx.globalAlpha = 0.4 + 0.4 * Math.sin(time / 200);
+            ctx.stroke();
+
+            ctx.globalAlpha = Settings.opacity;
+
+            // Turn off shadow before drawing text so labels remain crisp
+            ctx.shadowBlur = 0;
+
+            if (showLabels) {
+              const fs = (zoom >= 11 ? 11 : 10) * dpr * Settings.labelSize;
+              ctx.font = `bold ${fs}px monospace`;
+              ctx.globalAlpha = Settings.opacity;
+              ctx.lineWidth = 3 * dpr;
+              const labelColor = "#8000FF"; // User requested specific color for hover popup
+              ctx.strokeStyle = isDarkColor(labelColor) ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.9)";
+              const label = highlightedNearby.name ? `${highlightedNearby.icao} (${highlightedNearby.name})` : highlightedNearby.icao;
+              
+              let labelX = x + r + 3 * dpr;
+              let labelY = y + 4 * dpr;
+              
+              ctx.strokeText(label, labelX, labelY);
+              ctx.fillStyle = labelColor;
+              ctx.fillText(label, labelX, labelY);
+            }
+
+            ctx.restore();
+          }
+        }
+      }
     } catch(e) {
       logMsg("[WPT] Draw error: " + String(e), true);
     }
@@ -2148,6 +2234,8 @@
   // Route info state
   let trackerRouteInfo = null;      // { callsign, airline, origin, destination } or null
   let trackerRouteCallsign = "";    // last callsign we fetched route for
+  let trackerRouteTimestamp = 0;    // last timestamp bucket we fetched route for (1-hour granularity)
+  let trackerRouteFirstPt = null;   // last drawn trail start point {lat, lon}
   let trackerRouteFetching = false; // true while fetch is in-flight
 
   function extractPlaneTrack() {
@@ -2156,8 +2244,19 @@
 
     // Primary source: track_linesegs (the actual drawn flight path)
     if (Array.isArray(SelectedPlane.track_linesegs) && SelectedPlane.track_linesegs.length > 0) {
+      // Sort by segment timestamp (tar1090 exposes `ts` on each lineseg) so that
+      // pts[0] is always the chronologically earliest point (departure/origin) and
+      // pts[last] is the most recent point (approaching destination).
+      // Without this sort, the array order is indeterminate — OpenLayers may render
+      // segments newest-first, which inverts origin and destination in the GPS fallback.
+      const sortedSegs = SelectedPlane.track_linesegs.slice().sort((a, b) => {
+        const ta = (a.ts != null ? a.ts : (a.position_time != null ? a.position_time : 0));
+        const tb = (b.ts != null ? b.ts : (b.position_time != null ? b.position_time : 0));
+        return ta - tb; // ascending: oldest first
+      });
+
       const seen = new Set();
-      for (const seg of SelectedPlane.track_linesegs) {
+      for (const seg of sortedSegs) {
         if (seg.position && Array.isArray(seg.position) && seg.position.length === 2) {
           const key = seg.position[0].toFixed(5) + "," + seg.position[1].toFixed(5);
           if (!seen.has(key)) {
@@ -2177,10 +2276,42 @@
     const callsign = (SelectedPlane.flight || "").trim();
     // Extract registration/tail number (e.g. "N7815L") to identify physical aircraft
     const registration = (SelectedPlane.registration || SelectedPlane.r || "").trim();
-    // Prioritize leg_ts (departure time) so we match the exact leg accurately
-    const timestamp = SelectedPlane.leg_ts || SelectedPlane.flightTs || SelectedPlane.position_time || Date.now()/1000;
+    
+    // The most accurate target time for flight snapping is the exact playback position time.
+    let timestamp = (SelectedPlane.position_time || (Date.now() / 1000)) * 1000;
 
-    return pts.length > 1 ? { pts, callsign, registration, timestamp: timestamp * 1000 } : null;
+    // In historical playback, position_time may be frozen at the start/end of the track
+    // while the plane icon is visually moved by the scrubber.
+    // We can calculate the true scrubbed time by finding the track point closest to the rendered position.
+    if (SelectedPlane.track && SelectedPlane.track.length > 0 && SelectedPlane.position) {
+      const curLon = SelectedPlane.position[0];
+      const curLat = SelectedPlane.position[1];
+      if (curLon !== undefined && curLat !== undefined) {
+        let minDst = Infinity;
+        let closestTime = timestamp;
+        
+        for (let i = 0; i < SelectedPlane.track.length; i++) {
+          const ptTime = SelectedPlane.track[i][0];
+          const ptLat = SelectedPlane.track[i][1];
+          const ptLon = SelectedPlane.track[i][2];
+          
+          if (ptTime && ptLat !== undefined && ptLon !== undefined) {
+            const dst = Math.pow(ptLat - curLat, 2) + Math.pow(ptLon - curLon, 2);
+            if (dst < minDst) {
+              minDst = dst;
+              closestTime = ptTime * 1000; // tar1090 track timestamps are in seconds
+            }
+          }
+        }
+        
+        // If we found a track point that perfectly matches the plane's icon location, use its time!
+        if (minDst < 0.001) {
+          timestamp = closestTime;
+        }
+      }
+    }
+
+    return pts.length > 1 ? { pts, callsign, registration, timestamp } : null;
   }
 
   async function updateTrackerData() {
@@ -2192,6 +2323,7 @@
       // Clear route info when no plane selected
       if (trackerRouteCallsign) {
         trackerRouteCallsign = "";
+        trackerRouteTimestamp = 0;
         trackerRouteInfo = null;
         renderRouteInfo();
       }
@@ -2201,14 +2333,35 @@
     const callsign = trackData.callsign;
 
     // ── Async route lookup (non-blocking) ─────────────────────────────────
-    if (callsign && callsign !== trackerRouteCallsign && !trackerRouteFetching) {
+    // Re-fetch only if the callsign changed OR the trail's starting point changed significantly (implying a new leg)
+    let shouldFetch = false;
+    const firstPt = pts.length > 0 ? pts[0] : null;
+
+    if (callsign && callsign !== trackerRouteCallsign) {
+      shouldFetch = true;
       trackerRouteCallsign = callsign;
+      trackerRouteTimestamp = trackData.timestamp;
+      trackerRouteFirstPt = firstPt;
+    } else if (callsign && firstPt && trackerRouteFirstPt) {
+      // Calculate squared distance between new start point and cached start point
+      const dLat = firstPt.lat - trackerRouteFirstPt.lat;
+      const dLon = firstPt.lon - trackerRouteFirstPt.lon;
+      const distSq = (dLat * dLat) + (dLon * dLon);
+      
+      // If the trail's physical start point moved by more than ~0.6 NM (0.01 degrees), the origin has changed!
+      if (distSq > 0.0001) {
+        shouldFetch = true;
+        trackerRouteTimestamp = trackData.timestamp;
+        trackerRouteFirstPt = firstPt;
+      }
+    }
+
+    if (shouldFetch && !trackerRouteFetching) {
       trackerRouteInfo = null;
       trackerRouteFetching = true;
       renderRouteInfo(); // Show "loading" state immediately
 
       // Helper: enrich origin/destination with airport names via OurAirports
-      // (same data source as Sandcat's GET_AIRPORT_NAME -- works for any airport worldwide)
       async function enrichAirports(r) {
         if (r.origin && r.origin.icao && !r.origin.name) {
           var oRes = await bgRequest({ type: "GET_AIRPORT_NAME", ident: r.origin.icao }).catch(() => null);
@@ -2221,30 +2374,40 @@
         return r;
       }
 
-      // Helper: GPS-based origin/destination (Sandcat-style, unlimited history).
-      // Finds the nearest CIFP airport to the first and last GPS points of the track.
-      // This works for ANY flight date, no FlightAware account or 3-month cap needed.
-      async function gpsOriginDest(pts, baseRoute) {
-        var gpsDet = await bgRequest({ type: "DETECT_ORIGIN_DEST_FROM_TRACK", points: pts }).catch(() => null);
-        if (!gpsDet) return baseRoute;
-        var r = baseRoute || { callsign: callsign, airline: null, origin: null, destination: null };
-        if (!r.origin && gpsDet.origin) r.origin = gpsDet.origin;
-        if (!r.destination && gpsDet.destination) r.destination = gpsDet.destination;
-        return r;
-      }
+      // ── HYBRID APPROACH ──────────────────────────────────────────────────
+      // Step 1: Get the ORIGIN from ADS-B trail (first GPS point → nearest airport).
+      //         This is always correct because the trail physically starts where the plane took off.
+      // Step 2: Pass that GPS origin to LOOKUP_ROUTE so FlightAware results are filtered
+      //         to ONLY match flights departing from that airport.
+      //         FlightAware gives us the DESTINATION (since the plane may not have arrived yet on ADS-B).
+      // Step 3: If FlightAware fails entirely, fall back to GPS for both origin and destination.
+      (async () => {
+        try {
+          // Step 1: Detect origin from ADS-B trail
+          var gpsDet = await bgRequest({ type: "DETECT_ORIGIN_DEST_FROM_TRACK", points: pts }).catch(() => null);
+          var gpsOriginIcao = (gpsDet && gpsDet.origin && gpsDet.origin.icao) ? gpsDet.origin.icao : null;
 
-      bgRequest({ type: "LOOKUP_ROUTE", callsign: callsign, registration: trackData.registration, timestamp: trackData.timestamp })
-        .then(async function (res) {
+          // Step 2: Fetch FlightAware route, passing gpsOrigin to filter results
+          var res = await bgRequest({
+            type: "LOOKUP_ROUTE",
+            callsign: callsign,
+            registration: trackData.registration,
+            timestamp: trackData.timestamp,
+            gpsOrigin: gpsOriginIcao  // NEW: tells background.js to prefer flights from this origin
+          }).catch(() => null);
+
           var r = (res && res.route) ? res.route : null;
 
-          // Sandcat insight: FlightAware scraping is capped at ~3 months.
-          // If it returned no origin/destination (old flight, no account, rate-limited),
-          // fall back to GPS-based airport detection from the actual ADS-B track.
-          // This mirrors exactly what Sandcat does in its Active Flight tab.
-          var hasOrigin = r && r.origin && r.origin.icao;
-          var hasDest   = r && r.destination && r.destination.icao;
-          if (!hasOrigin || !hasDest) {
-            r = await gpsOriginDest(pts, r);
+          // If FlightAware returned a result, use it directly.
+          // The GPS origin was already used by background.js to filter for the correct leg,
+          // so FlightAware's origin+destination pair is already the right one.
+          // Only fall back to GPS when FlightAware returned nothing.
+          if (!r || (!r.origin && !r.destination)) {
+            if (gpsOriginIcao || (gpsDet && gpsDet.destination)) {
+              r = r || { callsign: callsign, airline: null, origin: null, destination: null };
+              if (gpsOriginIcao) r.origin = { icao: gpsOriginIcao, iata: null, name: null, city: null };
+              if (gpsDet && gpsDet.destination) r.destination = gpsDet.destination;
+            }
           }
 
           if (!r || (!r.origin && !r.destination)) {
@@ -2258,23 +2421,12 @@
           trackerRouteFetching = false;
           trackerRouteInfo = r;
           renderRouteInfo();
-        })
-        .catch(async function () {
-          // FlightAware fetch threw -- still try GPS fallback before giving up
-          try {
-            var r = await gpsOriginDest(pts, null);
-            if (r && (r.origin || r.destination)) {
-              r = await enrichAirports(r);
-              trackerRouteFetching = false;
-              trackerRouteInfo = r;
-              renderRouteInfo();
-              return;
-            }
-          } catch (_) {}
+        } catch (_) {
           trackerRouteFetching = false;
           trackerRouteInfo = null;
           renderRouteInfo();
-        });
+        }
+      })();
     }
 
     // Compute bounding box of path + 25NM padding
@@ -2387,6 +2539,9 @@
     for (const k in zones) zones[k].sort((a, b) => b.nearestSegIdx - a.nearestSegIdx);
     currentTrackerData.zones = zones;
     renderTrackerResults();
+
+    // Keep nearby airports modal in sync while open
+    _nearbyScheduleRefresh(pts);
   }
 
   function getTrackerTypeColor(t) {
@@ -2711,13 +2866,13 @@
         + '<span style="color:#c9d1d9;font-size:11px;margin-top:3px;text-align:center;white-space:normal;word-break:break-word;max-width:130px;line-height:1.3;">' + (dName || '<span style="color:#484f58;font-style:italic;">name unavailable</span>') + '</span>'
         + '</div>'
         + '</div>';
-
-      // Nearby Airports button
-      h += '<div style="text-align:center;padding:2px 14px 8px;">'
-        + '<button id="sweden-trk-nearby-btn" style="background:rgba(63,185,80,0.12);border:1px solid rgba(63,185,80,0.35);color:#3fb950;padding:4px 14px;border-radius:4px;cursor:pointer;font-size:11px;font-weight:600;font-family:monospace;letter-spacing:0.5px;transition:background 0.15s;">'
-        + '🛫 Nearby Airports</button>'
-        + '</div>';
     }
+
+    // Nearby Airports button — show whenever we have any route info
+    h += '<div style="text-align:center;padding:2px 14px 8px;">'
+      + '<button id="sweden-trk-nearby-btn" style="background:rgba(63,185,80,0.12);border:1px solid rgba(63,185,80,0.35);color:#3fb950;padding:4px 14px;border-radius:4px;cursor:pointer;font-size:11px;font-weight:600;font-family:monospace;letter-spacing:0.5px;transition:background 0.15s;">'
+      + 'Nearby Airports</button>'
+      + '</div>';
 
     el.innerHTML = h;
     el.style.display = h ? "block" : "none";
@@ -2735,6 +2890,29 @@
   let _nearbyAirports = [];       // cached result from background
   let _nearbyFetching = false;
   let _nearbyQuery = "";
+  let _nearbyFetchTimer = null;   // guards real-time refresh
+  let _nearbyLastFetch = 0;       // timestamp of last successful fetch
+
+  function _nearbyScheduleRefresh(pts) {
+    if (!document.getElementById("sweden-nearby-modal")) return; // modal not open
+    if (_nearbyFetching) return;                                  // already in flight
+    var now = Date.now();
+    if (now - _nearbyLastFetch < 3000) return;                    // throttle: once per 3 s
+    _nearbyLastFetch = now;
+    _nearbyFetching = true;
+    // Do not call renderNearbyList() here to avoid flashing the spinner
+
+    bgRequest({ type: "GET_NEARBY_AIRPORTS", points: pts, maxNm: 100 }, 30000)
+      .then(function (res) {
+        _nearbyAirports = (res && res.airports) || [];
+        _nearbyFetching = false;
+        renderNearbyList();
+      })
+      .catch(function () {
+        _nearbyFetching = false;
+        renderNearbyList();
+      });
+  }
 
   function openNearbyAirportsModal() {
     // Remove if already open
@@ -2750,11 +2928,12 @@
     modal.style.cssText = "position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:380px;max-height:70vh;background:#0d1117;border:1px solid #30363d;border-radius:10px;box-shadow:0 12px 48px rgba(0,0,0,0.7);z-index:10002;display:flex;flex-direction:column;font-family:-apple-system,BlinkMacSystemFont,monospace;";
 
     modal.innerHTML = '<div id="sweden-nearby-drag" style="padding:10px 14px;background:#161b22;border-bottom:1px solid #30363d;border-radius:10px 10px 0 0;display:flex;justify-content:space-between;align-items:center;cursor:move;">'
-      + '<span style="color:#c9d1d9;font-weight:bold;font-size:13px;">🛫 Nearby Airports (&lt; 150 NM)</span>'
+      + '<span style="color:#c9d1d9;font-weight:bold;font-size:13px;">Nearby Airports (&lt; 100 NM)</span>'
       + '<span id="sweden-nearby-close" style="color:#8b949e;cursor:pointer;font-size:18px;line-height:1;">&times;</span>'
       + '</div>'
       + '<div style="padding:8px 12px;border-bottom:1px solid #30363d;">'
       + '<input type="text" id="sweden-nearby-search" placeholder="Search airports..." style="width:100%;box-sizing:border-box;background:#161b22;border:1px solid #30363d;color:#c9d1d9;padding:6px 10px;border-radius:4px;outline:none;font-size:12px;font-family:monospace;" />'
+      + '<div style="font-size:10px;color:#484f58;margin-top:5px;text-align:center;">🖱 Left-click: pan camera &nbsp;·&nbsp; Right-click: open AirNav</div>'
       + '</div>'
       + '<div id="sweden-nearby-list" style="flex:1;overflow-y:auto;background:#0d1117;"></div>';
 
@@ -2803,16 +2982,59 @@
       renderNearbyList();
     });
 
-    // Fetch airports
+    // Delegated click: left = pan camera, right = open AirNav
+    var listEl = modal.querySelector("#sweden-nearby-list");
+    
+    listEl.addEventListener("mouseover", function (e) {
+      var item = e.target.closest(".sw-nearby-item");
+      if (item) {
+        var icaoEl = item.querySelector(".sw-nearby-icao");
+        if (icaoEl) _highlightIdent = icaoEl.getAttribute("data-icao") || null;
+      }
+    });
+    listEl.addEventListener("mouseout", function (e) {
+      var item = e.target.closest(".sw-nearby-item");
+      if (item) _highlightIdent = null;
+    });
+
+    listEl.addEventListener("click", function (e) {
+      var item = e.target.closest(".sw-nearby-item");
+      if (!item) return;
+
+      // Pan camera (using fallback logic from normal search, since window.OLMap is blocked in content script)
+      var lat = parseFloat(item.getAttribute("data-lat"));
+      var lon = parseFloat(item.getAttribute("data-lon"));
+      if (!isNaN(lat) && !isNaN(lon)) {
+        if (typeof setCenterByLatLon === "function") {
+          setCenterByLatLon(lat, lon);
+        } else {
+          var map = getOLMap();
+          if (map && window.ol) {
+            map.getView().animate({ center: window.ol.proj.fromLonLat([lon, lat]), duration: 500, zoom: 12 });
+          }
+        }
+      }
+    });
+    listEl.addEventListener("contextmenu", function (e) {
+      var item = e.target.closest(".sw-nearby-item");
+      if (!item) return;
+      e.preventDefault();
+      var url = item.getAttribute("data-url");
+      if (url) window.open(url, "_blank");
+    });
+
+    // Initial fetch — reset last-fetch time so subsequent auto-refreshes aren't blocked
+    _nearbyLastFetch = 0;
     _nearbyFetching = true;
     _nearbyAirports = [];
     _nearbyQuery = "";
     renderNearbyList();
 
-    bgRequest({ type: "GET_NEARBY_AIRPORTS", points: trackData.pts, maxNm: 150 }, 30000)
+    bgRequest({ type: "GET_NEARBY_AIRPORTS", points: trackData.pts, maxNm: 100 }, 30000)
       .then(function (res) {
         _nearbyAirports = (res && res.airports) || [];
         _nearbyFetching = false;
+        _nearbyLastFetch = Date.now(); // start the 10s throttle clock after first fetch
         renderNearbyList();
       })
       .catch(function () {
@@ -2826,7 +3048,7 @@
     var listEl = document.getElementById("sweden-nearby-list");
     if (!listEl) return;
 
-    if (_nearbyFetching) {
+    if (_nearbyFetching && _nearbyAirports.length === 0) {
       listEl.innerHTML = '<div style="padding:20px;text-align:center;color:#484f58;font-size:12px;display:flex;align-items:center;justify-content:center;gap:6px;">'
         + '<span style="display:inline-block;width:12px;height:12px;border:2px solid #30363d;border-top-color:#58a6ff;border-radius:50%;animation:sw-trk-spin 0.8s linear infinite;"></span>'
         + 'Scanning nearby airports...</div>';
@@ -2839,17 +3061,25 @@
     if (_nearbyQuery) {
       items = items.map(function (a) {
         var q = _nearbyQuery;
+        var nameClean = (a.name || "").toUpperCase().replace(/[^A-Z ]/g, "");
+        // Score against whole fields
         var s = Math.max(
           soundScore(a.icao, q),
-          soundScore((a.name || "").toUpperCase().replace(/[^A-Z ]/g, ""), q),
+          soundScore(nameClean, q),
           soundScore((a.city || "").toUpperCase(), q)
         );
+        // Score against each word of the name individually (catches "DeKalb" from "DeKalb Taylor Municipal")
+        var words = nameClean.split(" ");
+        for (var wi = 0; wi < words.length; wi++) {
+          if (words[wi].length >= 3) s = Math.max(s, soundScore(words[wi], q));
+        }
+        // Exact / substring boosts
         if ((a.icao || "").includes(q)) s = Math.max(s, 250);
-        if ((a.name || "").toUpperCase().includes(q)) s = Math.max(s, 180);
-        if ((a.city || "").toUpperCase().includes(q)) s = Math.max(s, 150);
+        if (nameClean.includes(q)) s = Math.max(s, 200);
+        if ((a.city || "").toUpperCase().includes(q)) s = Math.max(s, 160);
         if (a.iata && a.iata.toUpperCase() === q) s = Math.max(s, 300);
         return { apt: a, score: s };
-      }).filter(function (x) { return x.score >= 60; })
+      }).filter(function (x) { return x.score >= 50; })
         .sort(function (a, b) { return b.score - a.score; })
         .map(function (x) { return x.apt; });
     }
@@ -2866,10 +3096,10 @@
       var typeColor = a.type === 'large_airport' ? '#58a6ff' : a.type === 'medium_airport' ? '#3fb950' : '#8b949e';
       var iataStr = a.iata ? ' (' + a.iata + ')' : '';
       var url = 'https://www.airnav.com/airport/' + a.icao;
-      h += '<a href="' + url + '" target="_blank" rel="noopener" class="sw-nearby-item" style="display:block;padding:8px 12px;border-bottom:1px solid #21262d;text-decoration:none;cursor:pointer;transition:background 0.1s;">'
+      h += '<div class="sw-nearby-item" data-url="' + url + '" data-lat="' + a.lat + '" data-lon="' + a.lon + '" style="display:block;padding:8px 12px;border-bottom:1px solid #21262d;cursor:pointer;transition:background 0.1s;">'
         + '<div style="display:flex;align-items:baseline;justify-content:space-between;">'
         + '<div style="display:flex;align-items:baseline;gap:6px;min-width:0;flex:1;">'
-        + '<span style="color:#3fb950;font-weight:bold;font-size:13px;font-family:monospace;flex-shrink:0;">' + a.icao + '</span>'
+        + '<span class="sw-nearby-icao" data-icao="' + a.icao + '" data-name="' + (a.name || "").replace(/"/g, '&quot;') + '" style="color:#8000FF;font-weight:bold;font-size:13px;font-family:monospace;flex-shrink:0;">' + a.icao + '</span>'
         + '<span style="color:#8b949e;font-size:10px;flex-shrink:0;">' + iataStr + '</span>'
         + '<span style="color:#c9d1d9;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + a.name + '</span>'
         + '</div>'
@@ -2879,7 +3109,7 @@
         + '<span style="font-size:10px;color:#484f58;">' + (a.city || '') + '</span>'
         + '<span style="font-size:11px;color:#8b949e;font-weight:600;">' + a.distance + ' NM</span>'
         + '</div>'
-        + '</a>';
+        + '</div>';
     }
     listEl.innerHTML = h;
   }

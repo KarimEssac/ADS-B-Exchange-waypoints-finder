@@ -32,6 +32,7 @@ function _parseOurAirportsCsv(text) {
   const headers = lines[0].split(',').map(h => h.replace(/^"|"$/g, '').trim());
   const iIdent = headers.indexOf('ident');
   const iGps   = headers.indexOf('gps_code');
+  const iLocal = headers.indexOf('local_code');
   const iName  = headers.indexOf('name');
   const iLat   = headers.indexOf('latitude_deg');
   const iLon   = headers.indexOf('longitude_deg');
@@ -53,10 +54,13 @@ function _parseOurAirportsCsv(text) {
     cols.push(cur);
     const ident = (cols[iIdent] || '').trim().toUpperCase();
     const gps   = (cols[iGps]   || '').trim().toUpperCase();
+    const local = (cols[iLocal] || '').trim().toUpperCase();
     const name  = (cols[iName]  || '').trim();
     if (!name) continue;
     if (ident) map.set(ident, name);
     if (gps && gps !== ident) map.set(gps, name);
+    // Also index by FAA local_code (e.g. "1G0") — FlightAware URLs use these for smaller US airports
+    if (local && local !== ident && local !== gps) map.set(local, name);
     // Build full list entry for nearby-airport lookups
     const lat = parseFloat(cols[iLat]);
     const lon = parseFloat(cols[iLon]);
@@ -103,7 +107,7 @@ const DB_NAME = "AdsbWptCache";
 const STORE_NAME = "fixes";
 const MOAS_STORE = "moas";
 const FBOS_STORE = "fbos";
-const CACHE_VERSION = 17; // Bumped to add FBO object store
+const CACHE_VERSION = 19; // Bumped to force reload of cifp.zip with new waypoints/navaids (FULLCAPS)
 
 function openDb() {
   return new Promise((resolve, reject) => {
@@ -286,6 +290,60 @@ async function loadCifp() {
     /* console.log("[WPT] CIFP loaded, length:", text.length); */
 
     parseCifp(text);
+
+    // Also parse navaids.csv if present
+    const navaidsName = Object.keys(files).find(k => /navaids\.csv/i.test(k));
+    if (navaidsName) {
+      const csv = new TextDecoder("utf-8").decode(files[navaidsName]);
+      const lines = csv.split(/\r?\n/);
+      for (let i = 1; i < lines.length; i++) {
+        if (!lines[i].trim()) continue;
+        const cols = lines[i].split(",");
+        if (cols.length >= 5) {
+          const ident = cols[0].trim().toUpperCase();
+          const name = cols[1].trim().toUpperCase();
+          let typeRaw = cols[2].trim().toUpperCase();
+          const lat = parseFloat(cols[3]);
+          const lon = parseFloat(cols[4]);
+          
+          let type = "ndb";
+          if (typeRaw.includes("VOR") || typeRaw.includes("TACAN")) type = "vor";
+
+          if (!isNaN(lat) && !isNaN(lon)) {
+             FIXES.push({ ident, lat, lon, type, name });
+          }
+        }
+      }
+    }
+
+    // Also parse waypoints.csv if present
+    const waypointsName = Object.keys(files).find(k => /waypoints\.csv/i.test(k));
+    if (waypointsName) {
+      const csv = new TextDecoder("utf-8").decode(files[waypointsName]);
+      const lines = csv.split(/\r?\n/);
+      for (let i = 1; i < lines.length; i++) {
+        if (!lines[i].trim()) continue;
+        // Regex split handles commas inside quotes
+        const split = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+        if (split.length >= 5) {
+           const ident = split[2].replace(/"/g, "").trim().toUpperCase();
+           const latStr = split[3].replace(/"/g, "").trim();
+           const lonStr = split[4].replace(/"/g, "").trim();
+           
+           const mLat = latStr.match(/(\d+)[^\d]+(\d+)[^\d]+([\d.]+)[^\dNSWE]*([NSWE])/i);
+           const mLon = lonStr.match(/(\d+)[^\d]+(\d+)[^\d]+([\d.]+)[^\dNSWE]*([NSWE])/i);
+           
+           if (mLat && mLon) {
+             let lat = parseFloat(mLat[1]) + parseFloat(mLat[2])/60 + parseFloat(mLat[3])/3600;
+             if (mLat[4].toUpperCase() === 'S') lat = -lat;
+             let lon = parseFloat(mLon[1]) + parseFloat(mLon[2])/60 + parseFloat(mLon[3])/3600;
+             if (mLon[4].toUpperCase() === 'W') lon = -lon;
+             
+             FIXES.push({ ident, lat, lon, type: "fix" });
+           }
+        }
+      }
+    }
 
     // 3. Cache parsed fixes to IndexedDB
     /* console.log("[WPT] Saving to IndexedDB cache..."); */
@@ -888,7 +946,13 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     }
 
     // Check in-memory cache (10-minute TTL)
-    const cached = _routeCache.get(callsign || reg);
+    // Include gpsOrigin in the key so that different legs (same callsign, different physical origin)
+    // get separate cache entries. This is essential for the hybrid ADS-B + FlightAware approach.
+    const targetTime = msg.timestamp || Date.now();
+    const gpsOrig = (msg.gpsOrigin || "").toUpperCase();
+    const timeBucket = Math.round(targetTime / 600000); // 10-minute buckets
+    const cacheKey = (callsign || reg) + ':' + timeBucket + ':' + gpsOrig;
+    const cached = _routeCache.get(cacheKey);
     if (cached && (Date.now() - cached.ts < 600000)) {
       sendResponse({ route: cached.data });
       return true;
@@ -915,32 +979,61 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
         // Parse route candidates from history table rows
         // URL pattern: /history/{YYYYMMDD}/{HHmmZ}/{ORIG}/{DEST}
-        const targetTime = msg.timestamp || Date.now();
+        // Note: targetTime is captured from the outer scope (already computed for cache key)
         let bestRoute = null;
         let bestDiff = Infinity;
 
         const htmlSources = [histHtml, liveHtml];
+        let allRoutes = [];
+        
         for (const html of htmlSources) {
-          // Find all history links with route pattern
-          const regex = /href="[^"]*\/history\/(\d{8})\/(\d{4}Z?)\/([A-Z0-9]{2,4})\/([A-Z0-9]{2,4})/gi;
+          const regex = /href="[^"]*\/history\/(\d{8})\/(\d{4}Z)\/([A-Z0-9]{2,4})\/([A-Z0-9]{2,4})/gi;
           let match;
           while ((match = regex.exec(html)) !== null) {
             const d = match[1], t = match[2].replace(/Z$/i, ""), orig = match[3].toUpperCase(), dest = match[4].toUpperCase();
             const ts = Date.UTC(
-              parseInt(d.slice(0, 4)),
-              parseInt(d.slice(4, 6)) - 1,
-              parseInt(d.slice(6, 8)),
-              parseInt(t.slice(0, 2)),
-              parseInt(t.slice(2, 4))
+              parseInt(d.slice(0, 4), 10),
+              parseInt(d.slice(4, 6), 10) - 1,
+              parseInt(d.slice(6, 8), 10),
+              parseInt(t.slice(0, 2), 10),
+              parseInt(t.slice(2, 4), 10)
             );
-            
-            // Exactly like Sandcat: Find the flight that minimizes the absolute time difference
-            // to the target timestamp from the ADS-B data.
-            const diff = Math.abs(ts - targetTime);
-            if (diff < bestDiff) {
-              bestDiff = diff;
-              bestRoute = { orig, dest, ts, dateStr: d, timeStr: t, diff };
+            allRoutes.push({ orig, dest, ts, dateStr: d, timeStr: t });
+          }
+        }
+
+        // ── GPS-Origin Hybrid Filter ─────────────────────────────────────────
+        // If gpsOrigin was provided (from ADS-B trail first point), ONLY consider
+        // FlightAware routes that depart from that exact airport.
+        // This is the killer feature: the trail physically starts at the real origin,
+        // so we use it to instantly disambiguate multi-leg flights.
+        const gpsOrigin = (msg.gpsOrigin || "").toUpperCase();
+        let candidateRoutes;
+        if (gpsOrigin) {
+          // Filter to only flights departing from the GPS-detected origin
+          candidateRoutes = allRoutes.filter(r => r.orig === gpsOrigin);
+          // If no flights match the GPS origin (e.g., small uncharted airport), fall back to all routes
+          if (candidateRoutes.length === 0) candidateRoutes = allRoutes;
+        } else {
+          candidateRoutes = allRoutes;
+        }
+
+        for (const route of candidateRoutes) {
+          let diff;
+          if (route.ts > targetTime) {
+            const futureMs = route.ts - targetTime;
+            if (futureMs > 3600000) {
+              diff = futureMs + 21600000; 
+            } else {
+              diff = futureMs;
             }
+          } else {
+            diff = targetTime - route.ts;
+          }
+          
+          if (diff <= bestDiff) {
+            bestDiff = diff;
+            bestRoute = { ...route, diff };
           }
         }
 
@@ -955,7 +1048,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         }
 
         if (!bestRoute) {
-          _routeCache.set(callsign || reg, { ts: Date.now(), data: null });
+          _routeCache.set(cacheKey, { ts: Date.now(), data: null });
           sendResponse({ route: null });
           return;
         }
@@ -970,11 +1063,11 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           flightTime: bestRoute.timeStr,
           timeDiff: bestRoute.diff
         };
-        _routeCache.set(callsign, { ts: Date.now(), data: route });
+        _routeCache.set(cacheKey, { ts: Date.now(), data: route });
         sendResponse({ route });
       })
       .catch(() => {
-        _routeCache.set(callsign, { ts: Date.now() - 540000, data: null });
+        _routeCache.set(cacheKey, { ts: Date.now() - 540000, data: null });
         sendResponse({ route: null });
       });
     return true; // async response
@@ -1044,22 +1137,26 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       minLon -= degPad; maxLon += degPad;
 
       const results = [];
+      const currentPt = pts[pts.length - 1]; // Plane's current location
+
       for (const apt of _ourAirportsList) {
         if (apt.lat < minLat || apt.lat > maxLat || apt.lon < minLon || apt.lon > maxLon) continue;
-        let bestDist = Infinity;
-        if (pts.length === 1) {
-          bestDist = haversineNm(pts[0].lat, pts[0].lon, apt.lat, apt.lon);
-        } else {
-          for (let i = 0; i < pts.length - 1; i++) {
-            const d = ptSegDistNm(pts[i].lat, pts[i].lon, pts[i + 1].lat, pts[i + 1].lon, apt.lat, apt.lon);
-            if (d < bestDist) bestDist = d;
-          }
-        }
-        if (bestDist <= maxNm) {
-          results.push({ ...apt, distance: Math.round(bestDist * 10) / 10 });
+        
+        // Strictly use distance from current plane position
+        const currentDist = haversineNm(currentPt.lat, currentPt.lon, apt.lat, apt.lon);
+        
+        if (currentDist <= maxNm) {
+          // If the plane is extremely close (visited), give it a slight artificial boost 
+          // to ensure it stays absolute #1 even if another airport is technically slightly closer at the apron
+          let sortDist = currentDist;
+          if (currentDist < 2.0) sortDist -= 5.0; 
+
+          results.push({ ...apt, distance: Math.round(currentDist * 10) / 10, sortDist });
         }
       }
-      results.sort((a, b) => a.distance - b.distance);
+      
+      // Sort by current distance (closest first), placing newly visited/closer airports at the top
+      results.sort((a, b) => a.sortDist - b.sortDist);
       sendResponse({ airports: results });
     })();
     return true;
