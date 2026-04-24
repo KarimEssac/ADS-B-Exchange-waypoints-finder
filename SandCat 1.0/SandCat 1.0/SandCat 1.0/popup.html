@@ -1,0 +1,2009 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Nearby Airports</title>
+    <style>
+body {
+  margin: 0;
+  padding: 16px;
+  background: #0b1220;
+  color: #e5e7eb;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  box-sizing: border-box;
+  position: relative;
+  overflow: visible;
+}
+
+#airportSuggestions {
+  min-width: 220px;
+}
+
+body {
+  background: #0b1220 !important;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+}
+  .row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 6px;
+  align-items: center;
+}
+
+  label {
+  font-size: 11px;
+  margin-bottom: 2px;
+  opacity: 0.75;
+}
+
+  input:not([type="checkbox"]),
+select {
+  width: 100%;
+  box-sizing: border-box;
+  background: #1b1f26;
+  border: 1px solid #2b313c;
+  color: #e6e8eb;
+  padding: 6px 8px;
+  font-size: 12px;
+  border-radius: 6px;
+}
+
+input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #ec4899; /* keeps your pink check */
+  cursor: pointer;
+}
+
+  input:focus, select:focus {
+    outline: none;
+    border-color: #4c8dff;
+  }
+
+button:not(#popupClose){
+  padding: 8px 10px;
+  cursor: pointer;
+  background: linear-gradient(135deg, #2f6bff, #1e4ed8);
+  border: none;
+  color: white;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: 0.15s ease;
+  font-size: 13px;
+}
+
+  button:hover { filter: brightness(1.1); }
+
+  .small {
+  font-size: 10px;
+  color: #6b7280;
+  line-height: 1.2;
+  opacity: 0.7;
+}
+
+  .status {
+    font-size: 11px;
+    margin: 6px 0;
+    color: #9aa4b2;
+  }
+
+  .error { color: #ff5c5c; }
+
+
+#results {
+  padding-bottom: 8px;
+}
+  /* 🔥 Airport cards */
+.card {
+  background: linear-gradient(145deg, #111827, #0f172a);
+  border-radius: 16px;
+  padding: 12px;
+  margin-bottom: 10px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.55);
+}
+
+.card.copied {
+  background: rgba(34, 197, 94, 0.15);
+  transition: background 0.15s ease;
+}
+
+  .title {
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.sub {
+  opacity: 0.7;
+  margin-top: 4px;
+}
+
+  .sub {
+    font-size: 12px;
+    color: #9aa4b2;
+    margin-top: 3px;
+  }
+
+  .rwys, .proc {
+    font-size: 12px;
+    margin-top: 8px;
+    line-height: 1.4;
+    white-space: pre-wrap;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 6px;
+  }
+
+  hr {
+  border: none;
+  border-top: 1px solid #242933;
+  margin: 2px 0;
+}
+
+  /* Section headers */
+  .section-title {
+    margin-top: 12px;
+    font-weight: 700;
+    font-size: 13px;
+    color: #4c8dff;
+  }
+
+  /* Section panels */
+  .section-panel {
+    margin-top: 6px;
+    padding: 8px;
+    border-radius: 10px;
+    background: #11141a;
+    border: 1px solid #232834;
+  }
+
+  /* Runway selector row */
+  .rwy-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 6px 0 10px 0;
+  }
+
+  /* Runway blocks */
+  .rwy-block {
+    background: #0f131a;
+    border: 1px solid #262c37;
+    border-radius: 12px;
+    padding: 10px;
+    margin-top: 10px;
+  }
+
+  .rwy-header {
+    font-weight: 600;
+    font-size: 12px;
+    color: #cdd6f4;
+    margin-bottom: 6px;
+  }
+
+  /* Chips */
+#mainPanel span,
+#fixPopover span,
+.proc span,
+.rwys span,
+#routeResults span {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  margin: 4px 6px 0 0;
+  font-size: 12px;
+  background: #20242c;
+  border: 1px solid #2e3440;
+  color: #e6e8eb;
+  transition: 0.15s ease;
+}
+
+#mainPanel span:hover,
+#fixPopover span:hover,
+.proc span:hover,
+.rwys span:hover,
+#routeResults span:hover {
+  background: #2b3240;
+  border-color: #4c8dff;
+}
+
+  /* Fix popover */
+  #fixPopover {
+    position: fixed;
+    width: 240px;
+    max-height: 260px;
+    background: #161a22;
+    border: 1px solid #2b313c;
+    color: #e6e8eb;
+    border-radius: 12px;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.6);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 9999;
+  }
+
+  #fixPopover.hidden { display: none; }
+
+  #fixPopoverHeader {
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #242933;
+  }
+
+  #fixPopoverClose {
+    background: none;
+    border: none;
+    color: #8a93a3;
+    cursor: pointer;
+    font-size: 14px;
+  }
+
+  #fixPopoverClose:hover { color: #ffffff; }
+
+  #fixPopoverContent {
+    padding: 10px 12px;
+    font-size: 12px;
+    line-height: 1.4;
+    white-space: pre;
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  #fixPopoverContent::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  #fixPopoverContent::-webkit-scrollbar-thumb {
+    background: #3b4352;
+    border-radius: 3px;
+  }
+  
+* {
+  box-sizing: border-box;
+}
+
+#mainPanel,
+#sidePanel {
+  overflow-x: hidden;
+}
+
+/* PANEL */
+/* ===== Layout ===== */
+
+#layout {
+  flex: 1;                 /* take remaining space */
+  display: flex;
+  overflow: hidden;        /* important */
+  gap: 8px;
+  min-height: 0;           /* critical for flex scroll */
+}
+
+#mainPanel {
+  flex:  1 1 auto;
+  min-width: 500px;
+  min-height: 0;
+  overflow-y: auto;
+  position:relative;
+}
+
+/* Waypoint search row matches the card inset */
+#waypointSearchWrap{
+  width: calc(100% - 24px) !important;   /* 12px left + 12px right */
+  margin: 0 12px 10px 12px !important;   /* align with cards */
+  position: sticky !important;
+  top: 0;
+  z-index: 5;
+  background: #0b1220;                  /* so sticky doesn't look weird */
+  padding-top: 6px;
+}
+
+
+
+/* Waypoint search row */
+#waypointSearchWrap{
+  display: flex;
+  gap: 8px;
+  margin: 0 12px 10px 12px;  /* match card inset */
+}
+
+/* Input */
+#waypointSearch{
+  flex: 1;
+  height: 34px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #2b313c;
+  background: #1b1f26;
+  color: #e6e8eb;
+  font-size: 12px;
+}
+
+/* Clear button */
+
+
+
+#sidePanel {
+  flex: 0 0 260px;     /* fixed width */
+  width: 260px;
+  max-width: 260px;
+  min-width: 260px;
+
+  overflow-y: auto;    /* allow vertical scroll */
+  overflow-x: hidden;  /* prevent horizontal growth */
+}
+
+.sideItem {
+  overflow: hidden;
+}
+
+.sideItem .rwys {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#facilityPanel {
+  flex: 0 0 230px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+
+#sideTitle {
+  font-weight: 700;
+  margin-bottom: 10px;
+  font-size: 14px;
+  color: #93c5fd;
+  letter-spacing: 0.5px;
+}
+
+#sideList {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;              /* 🔥 spacing between airports */
+  padding-right: 6px;     /* scrollbar breathing room */
+}
+
+.sideItem {
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: #1f2937;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+#sideList {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(120,140,180,0.18) transparent;
+}
+
+#sideList::-webkit-scrollbar {
+  width: 5px;
+}
+
+#sideList::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#sideList::-webkit-scrollbar-thumb {
+  background: rgba(120,140,180,0.18);
+  border-radius: 999px;
+}
+
+#sideList:hover::-webkit-scrollbar-thumb {
+  background: rgba(120,140,180,0.35);
+}
+.sideItem:hover {
+  background: #334155;
+}
+
+.sideItem.active {
+  background: #2563eb;
+  color: white;
+}
+
+.sideItem .code {
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.sideItem .name {
+  font-size: 11px;
+  opacity: 0.8;
+  margin-top: 2px;
+}
+
+.sideItem .rwys {
+  font-size: 10px;
+  opacity: 0.6;
+  margin-top: 4px;
+}
+
+#sidebar h3 {
+  margin-top: 0;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: #93c5fd;
+}
+
+#facilityTitle {
+  font-weight: 700;
+  margin-bottom: 10px;
+  font-size: 14px;
+  color: #facc15;
+  letter-spacing: 0.5px;
+}
+
+#facilityContent {
+  flex: 1;
+  min-height: 0;
+overflow-y: auto;   /* 🔥 THIS IS THE FIX */
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  color: #cbd5e1;
+}
+
+.facilityItem {
+  margin-bottom: 6px;
+  padding: 6px 8px;
+  background: #1e293b;
+  border-radius: 8px;
+}
+
+
+
+
+/* ===== Compact Control Bar ===== */
+
+#controlBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  flex-wrap: nowrap;       /* 🔥 no wrapping */
+  white-space: nowrap;
+}
+
+#controlBar input,
+#controlBar select {
+  height: 34px;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+/* ICAO small */
+.icaoInput {
+  width: 120px;           /* was too small */
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-align: center;
+}
+
+/* Small number fields */
+#radiusNm,
+#maxResults {
+  width: 55px;
+}
+
+
+#types {
+  width: 100px;
+}
+
+/* Compact checkbox */
+.checkboxCompact {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  margin-left: 4px;
+}
+
+/* Smaller search button */
+.searchCompact {
+  flex: 0 0 110px;   /* fixed width */
+  margin-left: 8px;
+}
+.field {
+  display: flex;
+  align-items: center;
+}
+.smallField {
+  width: auto;
+}
+
+#radiusNm,
+#maxResults {
+  width: 65px;
+}
+
+#types {
+  width: 110px;
+}
+
+#popupClose:hover {
+  background: #1f2937;
+  color: white;
+}
+
+
+.footerNote {
+  text-align: center;
+  margin: 2px 0 0 0;
+  font-size: 9px;
+  color: #ffffff;      /* white */
+  opacity: 0.75;       /* subtle but readable */
+}
+
+
+
+
+#lbxTitle {
+  font-weight: 700;
+  font-size: 14px;
+  color: #f472b6;
+  margin-bottom: 10px;
+}
+
+.lbxLabel {
+  font-size: 10px;
+  opacity: 0.6;
+  margin-bottom: 4px;
+}
+#lbxKey {
+  width: 100%;
+  resize: none;
+  overflow: hidden;
+
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-weight: 600;
+  font-size: 12px;
+  line-height: 1.5;
+
+  background: #1b1f26;
+  border: 1px solid #2b313c;
+  border-radius: 8px;
+  padding: 8px 10px;
+
+  color: #e6e8eb;
+
+  min-height: 44px;
+}
+.lbxSpeedRow {
+  display: flex;
+  gap: 6px;
+}
+
+#lbxSpeedText {
+  width: 70px;
+}
+
+#lbxStatus {
+  font-size: 10px;
+  opacity: 0.7;
+  margin-top: auto;
+}
+
+
+/* IMPORTANT: prevent flex children from forcing layout weirdness */
+#mainPanel { min-width: 0; }
+#sidePanel { flex: 0 0 260px; }
+#facilityPanel { flex: 0 0 230px; }
+
+#lbxPanel > .lbxSection,
+#lbxPanel > div,
+#lbxPanel > label,
+#lbxPanel > hr {
+  flex-shrink: 0;
+}
+
+.lbxKeyRow {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.lbxKeyRow .lbxSubtleBtn {
+  align-self: flex-end;
+}
+
+
+.panelToggle {
+  position: absolute;
+  top: 50%;
+  left: -12px;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 48px;
+  border-radius: 12px;
+  border: 1px solid #1f2937;
+  background: #111827;
+  color: #9ca3af;
+  font-size: 14px;
+  cursor: pointer;
+  z-index: 5;
+}
+
+.panelToggle:hover {
+  background: #2563eb;
+  color: white;
+}
+
+
+
+
+#lbxPanel .lbxSubtleBtn {
+  background: transparent;
+  border: 1px solid #2b313c;
+  color: #9ca3af;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  cursor: pointer;
+  width: auto;
+}
+
+#lbxPanel .lbxSubtleBtn:hover {
+  background: #1f2937;
+  color: #e5e7eb;
+  border-color: #3b82f6;
+}
+
+#overlayRoot {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+#layout {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  gap: 8px;
+  min-height: 0;
+}
+
+/* ===== FACILITY PANEL ===== */
+
+#facilityPanel {
+  flex: 0 0 230px;
+  width: 230px;
+  transition: all 0.25s cubic-bezier(.4,0,.2,1);
+  position: relative;
+}
+
+/* Collapsed state */
+#overlayRoot:not(.facility-open) #facilityPanel {
+  flex: 0 0 36px;
+  width: 36px;
+  padding: 0;
+  cursor: pointer;
+  background: linear-gradient(145deg, #111827, #0f172a);
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Hide body */
+#overlayRoot:not(.facility-open) #facilityPanel .panel-body {
+  display: none;
+}
+
+/* Vertical label */
+#overlayRoot:not(.facility-open) #facilityPanel .panel-header {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-weight: 700;
+  font-size: 13px;
+  color: #facc15;
+  letter-spacing: 0.5px;
+  text-align: center;
+}
+
+
+#overlayRoot:not(.airportsearch-open) #airportSearchPanel .panel-header {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-weight: 700;
+  font-size: 13px;
+  color: #3b82f6; /* bright blue */
+  letter-spacing: 0.5px;
+  text-align: center;
+}
+
+#overlayRoot:not(.route-open) #routePanel .panel-header {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-weight: 700;
+  font-size: 13px;
+  color: #22c55e; /* bright green */
+  letter-spacing: 0.5px;
+  text-align: center;
+}
+
+
+
+/* Hover effect */
+#overlayRoot:not(.facility-open) #facilityPanel:hover {
+  background: #1f2937;
+}
+
+#overlayRoot.facility-open #facilityPanel {
+  background: linear-gradient(145deg, #111827, #0f172a);
+  border-radius: 16px;
+  padding: 12px;
+}
+
+#overlayRoot.facility-open #facilityPanel .panel-header {
+  writing-mode: horizontal-tb;
+  transform: none;
+  font-size: 14px;
+  font-weight: 700;
+  color: #facc15; /* keep your yellow accent */
+  margin-bottom: 10px;
+}
+.panel-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0; /* 🔥 THIS FIXES SCROLL */
+}
+
+/* ===== LBX PANEL ===== */
+
+#lbxPanel {
+  flex: 0 0 240px;
+  width: 240px;
+  background: #0f172a;
+  border-left: 1px solid #1f2937;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  transition: all 0.25s cubic-bezier(.4,0,.2,1);
+  overflow: visible;
+  min-height: auto;
+  height: auto;
+}
+
+/* Collapsed state */
+#overlayRoot:not(.lbx-open) #lbxPanel {
+  flex: 0 0 36px;
+  width: 36px;
+  padding: 0;
+  cursor: pointer;
+}
+
+/* Hide content */
+#overlayRoot:not(.lbx-open) #lbxPanel > *:not(#lbxTitle) {
+  display: none;
+}
+
+/* Vertical title */
+#overlayRoot:not(.lbx-open) #lbxTitle {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.waypointRow {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+#waypointSearch {
+  flex: 1;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid #2b313c;
+  background: #1b1f26;
+  color: #e6e8eb;
+  font-size: 12px;
+}
+
+#waypointClearBtn {
+  height: 34px;
+  min-width: 64px;
+  padding: 0 12px;
+
+  border-radius: 8px;
+  border: 1px solid #2b313c;
+
+  background: #1f2937;
+  color: #9ca3af;
+
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+
+  display: none; /* JS controls this */
+
+  transition: all 0.15s ease;
+}
+
+#waypointClearBtn:hover {
+  background: #2563eb;
+  color: white;
+  border-color: #2563eb;
+}
+
+
+/* ===== Compact Fix Popover ===== */
+
+#fixPopover {
+  width: 220px;
+  max-height: 240px;
+}
+
+#fixPopoverContent {
+  padding: 6px 8px;
+  font-size: 11px;
+}
+
+.fixRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3px 4px;
+  gap: 8px;
+  border-bottom: 1px solid #1f2430;
+}
+
+.fixRow:last-child {
+  border-bottom: none;
+}
+
+.fixCode {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.4px;
+  min-width: 52px;
+}
+
+.fixMeta {
+  font-size: 10px;
+  opacity: 0.75;
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+
+.fixRow.isNav .fixMeta {
+  opacity: 1;
+  color: #c7d2fe;
+}
+
+.fixRow.copied {
+  background: rgba(37, 99, 235, 0.15);
+  transition: background 0.15s ease;
+}
+
+
+#routePanel {
+  flex: 0 0 260px;
+  width: 260px;
+  background: #0f172a;
+  border-left: 1px solid #1f2937;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 10px;
+  transition: all 0.25s cubic-bezier(.4,0,.2,1);
+}
+.routeBody {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;        /* 🔥 critical */
+}
+
+#routeResults {
+  flex: 1;
+  overflow-y: auto;     /* 🔥 enable scroll */
+  min-height: 0;
+}
+
+/* Collapsed */
+#overlayRoot:not(.route-open) #routePanel {
+  flex: 0 0 36px;
+  width: 36px;
+  padding: 0;
+  cursor: pointer;
+}
+
+#overlayRoot:not(.route-open) #routePanel > *:not(#routeTitle) {
+  display: none;
+}
+
+#overlayRoot:not(.route-open) #routeTitle {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+#routeInput {
+  width: 100%;
+  resize: none;
+  overflow: hidden;
+  background: #1b1f26;
+  border: 1px solid #2b313c;
+  border-radius: 8px;
+  padding: 8px;
+  font-family: ui-monospace;
+  font-size: 12px;
+  color: #e6e8eb;
+  margin-bottom: 8px;
+  min-height: 60px;
+}
+
+#routeResults {
+  margin-top: 10px;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.routeFix {
+  padding: 4px 6px;
+  border-radius: 6px;
+  background: #1e293b;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+}
+
+.routeFix:hover {
+  background: #2563eb;
+}
+
+.routeFix.copied,
+.fixRow.copied {
+  background: rgba(0,150,255,.15);
+}
+#routeAnalysis{
+  background:#111827;
+  border-radius:10px;
+  padding:8px;
+  margin-bottom:10px;
+  font-size:12px;
+}
+
+.analysisBlock{
+  margin-bottom:8px;
+}
+
+.analysisHeader{
+  font-weight:700;
+  margin-bottom:3px;
+}
+
+.procTag {
+  font-size: 11px;
+  padding: 1px 6px;
+  margin-left: 6px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.procSID {
+  background: rgba(80,150,255,.15);
+  color: #5ea6ff;
+}
+
+.procSTAR {
+  background: rgba(170,100,255,.18);
+  color: #c08cff;
+}
+
+.procAPP {
+  background: rgba(80,200,120,.18);
+  color: #7ad9a2;
+}
+.procAIRWAY{
+  background: rgba(255,170,70,.18);
+  color:#ffb566;
+}
+.procTag {
+  margin-left:6px;
+  font-size:11px;
+}
+.flightCallsign{
+  font-weight:700;
+  font-size:15px;
+  margin-top:2px;
+}
+
+.flightRoute{
+  margin-top:6px;
+  line-height:1.4;
+}
+
+.flightAirport{
+  font-size:13px;
+}
+
+.flightArrow{
+  font-size:14px;
+  opacity:0.6;
+  margin:2px 0;
+}
+
+.airportCode{
+  opacity:0.7;
+  font-weight:500;
+}
+
+/* Modern minimal scrollbar */
+
+#mainPanel::-webkit-scrollbar {
+  width: 5px;
+}
+
+#mainPanel::-webkit-scrollbar-thumb {
+  background: rgba(148,163,184,0.25);
+  border-radius: 999px;
+}
+
+#mainPanel::-webkit-scrollbar-thumb:hover {
+  background: rgba(148,163,184,0.45);
+}
+
+#sideList::-webkit-scrollbar,
+#facilityContent::-webkit-scrollbar,
+#routeResults::-webkit-scrollbar {
+  width: 6px;
+}
+
+#sideList::-webkit-scrollbar-thumb,
+#facilityContent::-webkit-scrollbar-thumb,
+#routeResults::-webkit-scrollbar-thumb {
+  background: rgba(148,163,184,0.25);
+  border-radius: 6px;
+}
+#facilityResults{
+  flex-direction:column;
+  gap:6px;
+  max-height:280px;
+  overflow-y:auto;
+}
+
+.facilityRow{
+  background:#1e293b;
+  border-radius:8px;
+  padding:6px 8px;
+  font-size:12px;
+  display:flex;
+  justify-content:space-between;
+  gap:6px;
+  cursor:pointer;
+}
+
+.facilityRow:hover{
+  background:#2563eb;
+}
+
+.facilityFreq{
+  font-weight:600;
+  font-family: ui-monospace;
+}
+
+.facilityAirport{
+  opacity:0.6;
+}
+#facilityContent,
+#facilityResults {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+
+.sidePanelCard {
+  background: #111827;
+  border: 1px solid #232834;
+  border-radius: 12px;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+.sidePanelTitle {
+  font-weight: 700;
+  font-size: 13px;
+  color: #93c5fd;
+  margin-bottom: 8px;
+}
+
+.airportFilterBtn {
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid #2e3440;
+  background: #20242c;
+  color: #e6e8eb;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.airportFilterBtn.active {
+  border-color: #4c8dff;
+  background: rgba(76,141,255,0.16);
+  color: #93c5fd;
+}
+
+.airportSearchCard {
+  background: #0f131a;
+  border: 1px solid #262c37;
+  border-radius: 10px;
+  padding: 8px;
+  margin-bottom: 8px;
+  cursor: pointer;
+}
+
+.airportSearchCard:hover {
+  border-color: #4c8dff;
+}
+
+.airportSearchTitle {
+  font-weight: 700;
+  font-size: 12px;
+  color: #e6e8eb;
+}
+
+.airportSearchMeta {
+  font-size: 11px;
+  color: #9aa4b2;
+  margin-top: 4px;
+}
+
+.airportSearchReason {
+  font-size: 10px;
+  color: #7dd3fc;
+  margin-top: 4px;
+}
+
+#airportSearchPanel {
+  flex: 0 0 360px;
+  width: 360px;
+  background: #0f172a;
+  border-left: 1px solid #1f2937;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 12px;
+  transition: all 0.25s cubic-bezier(.4,0,.2,1);
+}
+
+#airportSearchPanel .panel-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+#overlayRoot:not(.airportsearch-open) #airportSearchPanel {
+  flex: 0 0 36px;
+  width: 36px;
+  padding: 0;
+  cursor: pointer;
+}
+
+#overlayRoot:not(.airportsearch-open) #airportSearchPanel > *:not(#airportSearchTitle) {
+  display: none;
+}
+
+#overlayRoot:not(.airportsearch-open) #airportSearchTitle {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+#airportSearchResults {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.airportLookupBody {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+  height: 100%;
+}
+
+.airportLookupTopline {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.airportLookupHint {
+  color: #60a5fa;
+}
+
+.airportLookupSectionLabel {
+  font-size: 12px;
+  font-weight: 700;
+  color: #cbd5e1;
+  letter-spacing: 0.3px;
+}
+
+.airportLookupContextRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.airportLookupOptional {
+  font-weight: 500;
+  color: #64748b;
+}
+
+#airportSearchQuery,
+#airportSearchContext {
+  width: 100%;
+  box-sizing: border-box;
+  background: #0f172a;
+  border: 1px solid #3b82f6;
+  color: #e6e8eb;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
+}
+
+#airportSearchContext {
+  resize: vertical;
+  min-height: 56px;
+  max-height: 120px;
+}
+
+.airportLookupHelper {
+  font-size: 11px;
+  line-height: 1.3;
+  color: #94a3b8;
+}
+
+.airportLookupFilters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.airportLookupResults {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  margin-top: 4px;
+  padding-right: 4px;
+}
+
+.airportLookupCard {
+  background: linear-gradient(145deg, #111827, #0f172a);
+  border: 1px solid #232834;
+  border-radius: 14px;
+  padding: 10px;
+  margin-bottom: 8px;
+  cursor: pointer;
+}
+
+.airportLookupCard:hover {
+  border-color: #3b82f6;
+}
+
+.airportLookupCardTitle {
+  font-weight: 700;
+  font-size: 13px;
+  color: #e5e7eb;
+}
+
+.airportLookupCardMeta {
+  margin-top: 4px;
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.airportLookupCardReason {
+  margin-top: 6px;
+  font-size: 11px;
+  color: #7dd3fc;
+}
+
+#airportLookupRoot span {
+  display: inline;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: none;
+  border-radius: 0;
+  font-size: inherit;
+  color: inherit;
+  transition: none;
+}
+
+#airportLookupRoot .airportLookupCard,
+#airportLookupRoot .card {
+  background: linear-gradient(145deg, #111827, #0f172a);
+  border: 1px solid #232834;
+  border-radius: 14px;
+  padding: 10px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  box-shadow: none;
+  transform: none;
+}
+
+#airportLookupRoot .airportLookupCard:hover,
+#airportLookupRoot .card:hover {
+  border-color: #3b82f6;
+  transform: none;
+  box-shadow: none;
+}
+
+#airportLookupRoot .airportLookupTag,
+#airportLookupRoot .airportLookupMatchTag,
+#airportLookupRoot .airportLookupCode,
+#airportLookupRoot .tag,
+#airportLookupRoot .match-tag,
+#airportLookupRoot .code,
+#airportLookupRoot .kw-tag {
+  display: inline-block;
+  padding: 3px 8px;
+  margin: 4px 6px 0 0;
+  border-radius: 999px;
+  border: 1px solid #2e3440;
+  background: #20242c;
+  font-size: 11px;
+  color: #e6e8eb;
+  line-height: 1.2;
+}
+
+#airportLookupRoot .airportLookupCardTitle,
+#airportLookupRoot .card-name,
+#airportLookupRoot .title {
+  font-weight: 700;
+  font-size: 13px;
+  color: #e5e7eb;
+}
+
+#airportLookupRoot .airportLookupCardMeta,
+#airportLookupRoot .card-meta,
+#airportLookupRoot .sub {
+  margin-top: 4px;
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+#airportLookupRoot .detail-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+#airportLookupRoot .detail-label {
+  display: none;
+}
+
+#airportLookupRoot .airportLookupCardTitle {
+  font-weight: 700;
+  font-size: 15px;
+  color: #e5e7eb;
+  line-height: 1.25;
+}
+
+#airportLookupRoot .airportLookupCardMeta {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+#airportLookupRoot .airportLookupMatchTag,
+#airportLookupRoot .airportLookupTag {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid #2e3440;
+  background: #20242c;
+  font-size: 11px;
+  color: #e6e8eb;
+}
+
+#airportLookupRoot .airportLookupCardReason {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+#airportLookupRoot .airportLookupCardActions {
+  margin-top: 10px;
+}
+
+#airportLookupRoot .airportLookupAdsbLink {
+  font-size: 12px;
+  color: #7dd3fc;
+  text-decoration: none;
+}
+
+#airportLookupRoot .airportLookupAdsbLink:hover {
+  text-decoration: underline;
+}
+
+/* ===== Collapsed Panel Base ===== */
+#overlayRoot:not(.facility-open) #facilityPanel::after,
+#overlayRoot:not(.airportsearch-open) #airportSearchPanel::after,
+#overlayRoot:not(.route-open) #routePanel::after,
+#overlayRoot:not(.lbx-open) #lbxPanel::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 20%;
+  bottom: 20%;
+  width: 3px;
+  border-radius: 2px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+/* colors */
+#facilityPanel::after { background: #facc15; }
+#airportSearchPanel::after { background: #3b82f6; }
+#routePanel::after { background: #22c55e; }
+#lbxPanel::after { background: #f472b6; }
+
+/* show on hover */
+#overlayRoot:not(.facility-open) #facilityPanel:hover::after,
+#overlayRoot:not(.airportsearch-open) #airportSearchPanel:hover::after,
+#overlayRoot:not(.route-open) #routePanel:hover::after,
+#overlayRoot:not(.lbx-open) #lbxPanel:hover::after {
+  opacity: 1;
+}
+
+#overlayRoot:not(.facility-open) #facilityPanel:hover {
+  background: #1f2937;
+  box-shadow: 0 0 0 1px rgba(250,204,21,0.25),
+              0 6px 14px rgba(0,0,0,0.4);
+  transform: translateX(-2px);
+}
+#overlayRoot:not(.airportsearch-open) #airportSearchPanel:hover {
+  background: #1f2937;
+  box-shadow: 0 0 0 1px rgba(59,130,246,0.35),
+              0 6px 14px rgba(0,0,0,0.4);
+  transform: translateX(-2px);
+}
+#overlayRoot:not(.route-open) #routePanel:hover {
+  background: #1f2937;
+  box-shadow: 0 0 0 1px rgba(34,197,94,0.35),
+              0 6px 14px rgba(0,0,0,0.4);
+  transform: translateX(-2px);
+}
+#overlayRoot:not(.lbx-open) #lbxPanel:hover {
+  background: #1f2937;
+  box-shadow: 0 0 0 1px rgba(244,114,182,0.35),
+              0 6px 14px rgba(0,0,0,0.4);
+  transform: translateX(-2px);
+}
+
+/* ===== Colored procedure chips (stronger selectors) ===== */
+
+/* Departures */
+#mainPanel .section-panel.departures span {
+  background: rgba(220, 70, 70, 0.18);
+  border-color: rgba(255, 120, 120, 0.38);
+  color: #ffd6d6;
+}
+
+#mainPanel .section-panel.departures span:hover {
+  background: rgba(220, 70, 70, 0.28);
+  border-color: rgba(255, 150, 150, 0.55);
+  color: #fff1f1;
+}
+
+/* Arrivals */
+#mainPanel .section-panel.arrivals span {
+  background: rgba(170, 130, 255, 0.18);
+  border-color: rgba(205, 180, 255, 0.38);
+  color: #efe4ff;
+}
+
+#mainPanel .section-panel.arrivals span:hover {
+  background: rgba(170, 130, 255, 0.28);
+  border-color: rgba(220, 200, 255, 0.55);
+  color: #faf5ff;
+}
+
+/* Approaches */
+#mainPanel .section-panel.approaches span {
+  background: rgba(176, 132, 82, 0.22);
+  border-color: rgba(214, 178, 136, 0.4);
+  color: #f4e5d3;
+}
+
+#mainPanel .section-panel.approaches span:hover {
+  background: rgba(176, 132, 82, 0.32);
+  border-color: rgba(224, 194, 158, 0.58);
+  color: #fff6ec;
+}
+
+
+/* Colored section panels */
+#mainPanel .section-panel.departures {
+  background: linear-gradient(180deg, rgba(120, 28, 28, 0.16), rgba(17, 20, 26, 0.96));
+  border-color: rgba(255, 110, 110, 0.16);
+}
+
+#mainPanel .section-panel.arrivals {
+  background: linear-gradient(180deg, rgba(110, 70, 170, 0.16), rgba(17, 20, 26, 0.96));
+  border-color: rgba(190, 160, 255, 0.16);
+}
+
+#mainPanel .section-panel.approaches {
+  background: linear-gradient(180deg, rgba(130, 90, 45, 0.18), rgba(17, 20, 26, 0.96));
+  border-color: rgba(214, 178, 136, 0.16);
+}
+
+
+#airportLookupRoot .airportLookupRunways {
+  margin-top: 8px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: #cbd5e1;
+  opacity: 0.9;
+}
+
+.airportContextToggleBtn {
+  background: transparent;
+  border: 1px solid #2b313c;
+  color: #94a3b8;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.airportContextToggleBtn:hover {
+  border-color: #3b82f6;
+  color: #dbeafe;
+}
+
+#airportContextBlock.is-collapsed {
+  display: none;
+}
+
+
+#airportLookupRoot .airportLookupCard.compact {
+  background: linear-gradient(180deg, rgba(20, 35, 70, 0.92), rgba(10, 18, 36, 0.96));
+  border: 1px solid rgba(59, 130, 246, 0.22);
+  border-radius: 14px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.22);
+  transition: transform 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease;
+}
+
+#airportLookupRoot .airportLookupCard.compact:hover {
+  transform: translateY(-1px);
+  border-color: rgba(96, 165, 250, 0.55);
+  box-shadow: 0 10px 22px rgba(0,0,0,0.28);
+}
+
+#airportLookupRoot .airportLookupCardTitle {
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1.22;
+  color: #f8fbff;
+  margin-bottom: 4px;
+}
+
+#airportLookupRoot .airportLookupMetaLine {
+  font-size: 11px;
+  line-height: 1.35;
+  color: #b8c7de;
+  margin-bottom: 5px;
+}
+
+#airportLookupRoot .airportLookupRunways {
+  font-size: 11px;
+  line-height: 1.35;
+  color: #d8e6ff;
+  margin-bottom: 5px;
+}
+
+#airportLookupRoot .airportLookupReasonLine {
+  font-size: 10px;
+  line-height: 1.3;
+  color: #8ec5ff;
+  margin-bottom: 6px;
+  opacity: 0.95;
+}
+
+#airportLookupRoot .airportLookupCardActions {
+  margin-top: 0;
+}
+
+#airportLookupRoot .airportLookupAdsbLink {
+  font-size: 11px;
+  font-weight: 600;
+  color: #7dd3fc;
+  text-decoration: none;
+}
+
+#airportLookupRoot .airportLookupAdsbLink:hover {
+  color: #bae6fd;
+  text-decoration: underline;
+}
+
+/* ===== Airport Lookup Scrollbars ===== */
+#airportLookupRoot,
+.airportLookupResults,
+.airportLookupBody {
+  scrollbar-width: thin;              /* Firefox */
+  scrollbar-color: rgba(120,140,180,0.25) transparent;
+}
+
+/* Chrome / Edge */
+#airportLookupRoot::-webkit-scrollbar,
+.airportLookupResults::-webkit-scrollbar,
+.airportLookupBody::-webkit-scrollbar {
+  width: 6px;
+}
+
+#airportLookupRoot::-webkit-scrollbar-track,
+.airportLookupResults::-webkit-scrollbar-track,
+.airportLookupBody::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#airportLookupRoot::-webkit-scrollbar-thumb,
+.airportLookupResults::-webkit-scrollbar-thumb,
+.airportLookupBody::-webkit-scrollbar-thumb {
+  background: rgba(120,140,180,0.25);
+  border-radius: 999px;
+}
+
+#airportLookupRoot::-webkit-scrollbar-thumb:hover,
+.airportLookupResults::-webkit-scrollbar-thumb:hover,
+.airportLookupBody::-webkit-scrollbar-thumb:hover {
+  background: rgba(120,140,180,0.45);
+}
+
+.airportLookupResults {
+  position: relative;
+}
+
+.airportLookupResults::after {
+  content: "";
+  position: sticky;
+  bottom: 0;
+  display: block;
+  height: 20px;
+  background: linear-gradient(to bottom, transparent, rgba(10,18,36,0.95));
+  pointer-events: none;
+}
+
+</style>
+  </head>
+  <body>
+    <div id="overlayRoot">
+    <div id="controlBar">
+
+      <button id="refreshKeyBtn">↻</button>
+<div id="refreshStatus" style="font-size:12px; opacity:0.7;"></div>
+  <div class="field">
+    <label>ICAO</label>
+    <input id="airportInput"
+           class="icaoInput"
+           maxlength="50"
+           placeholder="KDFW" />
+  </div>
+
+  <div class="field smallField">
+    <label>NM</label>
+    <input id="radiusNm" type="number" min="1" max="500" value="25" />
+  </div>
+
+  <div class="field smallField">
+    <label>Max</label>
+    <input id="maxResults" type="number" min="1" max="200" value="25" />
+  </div>
+
+<div class="field smallField">
+  <label style="display:flex; align-items:center; gap:6px;">
+  <input type="checkbox" id="internationalModeToggle" />
+  International Mode
+</label>
+</div>
+
+<div class="field smallField">
+  <label>Type</label>
+  <select id="types">
+    <option value="public" selected>Public</option>
+    <option value="all_airports">All Airports</option>
+    <option value="helipads_only">Helipads Only</option>
+    <option value="airports_plus_helipads">Airports + Helipads</option>
+  </select>
+</div>
+
+  <label class="checkboxCompact">
+    <input type="checkbox" id="filterNoApproaches" checked />
+    IAP
+  </label>
+<label style="display:flex; align-items:center; gap:6px;">
+  <input type="checkbox" id="mainOnlyToggle" />
+  Main Airport Only
+</label>
+
+  <button id="searchBtn" class="searchCompact">
+    Search
+  </button>
+
+</div>
+<div id="status" class="status"></div>
+
+<div id="layout">
+  <div id="mainPanel">
+
+<div id="waypointSearchWrap" class="waypointRow">
+  <input
+    id="waypointSearch"
+    placeholder="Search waypoint (fuzzy)..."
+  />
+  <button
+    id="waypointClearBtn"
+    type="button"
+  >Clear</button>
+  <label style="font-size:12px">
+  <input type="checkbox" id="procGlobalToggle">
+  US SIDs/STARs
+</label>
+</div>
+
+    <div id="results"></div>
+  </div>
+
+  <div id="sidePanel">
+    <div id="sideTitle">Airports</div>
+
+    <input
+      id="resultsSearch"
+      type="text"
+      placeholder="Search..."
+      style="
+        width: 100%;
+        padding: 6px 8px;
+        margin-bottom: 10px;
+        border-radius: 8px;
+        border: 1px solid #2b313c;
+        background: #1b1f26;
+        color: #e6e8eb;
+        font-size: 12px;
+      "
+    />
+    
+
+    <div id="sideList"></div>
+  </div>
+
+  <!-- NEW FACILITY PANEL -->
+  <div id="facilityPanel" class="panel collapsible">
+  <div class="panel-header">
+  Facility Info
+</div>
+<div class="panel-body">
+
+  <div style="display:flex; gap:6px; margin-bottom:6px;">
+    <input
+      id="facilitySearch"
+      placeholder="Search freq or facility..."
+      style="flex:1;"
+    />
+
+  </div>
+
+<div id="facilityResults" style="display:none;"></div>
+
+<div id="facilityContent">
+  Select an airport...
+</div>
+
+</div>
+</div>
+
+
+<div id="airportSearchPanel" class="panel collapsible">
+  <div class="panel-header" id="airportSearchTitle">Airport Lookup</div>
+
+<div class="panel-body">
+  <div id="airportLookupRoot" class="airportLookupBody">
+    <div class="airportLookupTopline">
+      <span>US Airports for Transcribers</span>
+      <span class="airportLookupHint">Fast fuzzy match</span>
+    </div>
+
+    <div class="airportLookupSectionLabel">AIRPORT GUESS</div>
+    <input
+      id="airportSearchQuery"
+      type="text"
+      placeholder="Type what you heard, e.g. 'dulles' or 'LAX'"
+    />
+
+    <div class="airportLookupSectionLabel airportLookupContextRow">
+  <span>CONTEXT CLUES</span>
+  <button id="airportContextToggle" type="button" class="airportContextToggleBtn">
+    Hide
+  </button>
+</div>
+
+<div id="airportContextBlock">
+  <textarea
+    id="airportSearchContext"
+    rows="3"
+    placeholder="Paste clues like city/state, NAVAIDs, waypoints, airline or callsign, tail number, military, heliport, or seaplane..."
+  ></textarea>
+
+  <div id="airportSearchHelperText" class="airportLookupHelper">
+    Strongest clues are location, airport/NAVAID codes, waypoint fixes, and full tail numbers like 21394 or N21394.
+  </div>
+</div>
+
+    <div id="airportSearchFilters" class="airportLookupFilters"></div>
+
+    <div id="airportSuggestions" class="airportLookupSuggestions"></div>
+    <div id="airportSearchResults" class="airportLookupResults"></div>
+  </div>
+</div>
+
+
+
+</div>
+
+
+<div id="routePanel" class="panel collapsible">
+  <div class="panel-header" id="routeTitle">Active Flight</div>
+
+  <div class="panel-body routeBody">
+    <input id="flightFixSearch" placeholder="Search fixes..." />
+    <div id="routeAnalysis"></div>
+    <button id="adsbClearFlight">Clear Flight</button>
+    <div id="routeResults"></div>
+  </div>
+</div>
+
+
+
+<div id="lbxPanel" class="panel collapsible">
+  <div class="panel-header" id="lbxTitle">LBX Helper</div>
+
+  <div class="panel-body">
+    <div class="lbxSection">
+      <div class="lbxKeyRow">
+        <div class="lbxLabel">Global Key</div>
+
+        <textarea
+          id="lbxKey"
+          placeholder="Paste or edit global key..."
+          spellcheck="false"
+        ></textarea>
+
+        <button id="pasteKeyBtn" class="lbxSubtleBtn">Paste</button>
+      </div>
+    </div>
+
+    <button id="lbxOpenNow">Open Selected Now</button>
+
+    <hr>
+
+    <label><input type="checkbox" id="opt_adsb" checked> ADS-B</label>
+    <label><input type="checkbox" id="opt_opennav"> OpenNav</label>
+    <label><input type="checkbox" id="opt_airnav"> AirNav</label>
+    <label><input type="checkbox" id="opt_foreflight"> ForeFlight</label>
+    <label class="option">
+      <input type="checkbox" id="opt_fixesfinder">
+      FixesFinder
+    </label>
+
+    <div class="lbxSpeedRow">
+      <input type="range" id="adsbSpeed" min="0" max="988" value="500">
+      <input type="number" id="adsbSpeedText" min="0" max="988" value="500">
+    </div>
+
+    <div id="lbxStatus"></div>
+  </div>
+</div>
+
+</div>
+
+    <hr />
+    <div class="small muted footerNote">
+  OurAirports + FAA NASR + CIFP
+</div>
+
+<hr />
+
+    <!-- Tooltip -->
+    <div id="tooltip" style="
+      position: fixed;
+      z-index: 9999;
+      display: none;
+      max-width: 360px;
+      background: #111;
+      color: #fff;
+      padding: 8px 10px;
+      border-radius: 10px;
+      font-size: 12px;
+      line-height: 1.35;
+      box-shadow: 0 6px 18px rgba(0,0,0,.25);
+      white-space: pre-wrap;
+      pointer-events: none;
+      
+    "></div>
+
+  
+<div id="fixPopover" class="hidden">
+  <div id="fixPopoverHeader">
+    <span id="fixPopoverTitle"></span>
+    <button id="fixPopoverClose">×</button>
+  </div>
+  <div id="fixPopoverContent"></div>
+</div>
+
+    <script type="module" src="popup.js"></script>
+    <script src="navaids.js"></script>
+    <script src="airports.js"></script>
+<script src="search.js"></script>
+  </body>
+</html>

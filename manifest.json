@@ -1,0 +1,41 @@
+{
+  "manifest_version": 3,
+  "name": "Sweden",
+  "version": "2.1",
+  "description": "Overlay waypoints, fixes, VORs, and NDBs on ADS-B Exchange map",
+  "permissions": ["storage", "scripting", "activeTab", "tabs"],
+  "host_permissions": [
+    "https://globe.adsbexchange.com/*",
+    "https://www.flightaware.com/*"
+  ],
+  "icons": {
+    "16":  "icon16.png",
+    "32":  "icon32.png",
+    "48":  "icon48.png",
+    "128": "icon128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icon16.png",
+      "32": "icon32.png"
+    },
+    "default_title": "Sweden"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["cifp.zip", "moasfbos.zip", "airports.csv", "fflate.js", "content_main.js"],
+      "matches": ["https://globe.adsbexchange.com/*"]
+    }
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://globe.adsbexchange.com/*"],
+      "js": ["content_bridge.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
