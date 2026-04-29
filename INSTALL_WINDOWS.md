@@ -1,8 +1,0 @@
-# Installation – Windows
-
-1. Download and extract `ADSB_Waypoints_v1.1_Windows.zip`
-2. Open Chrome and go to `chrome://extensions/`
-3. Enable **Developer mode** (toggle in the top-right corner)
-4. Click **Load unpacked**
-5. Select the extracted `ADSB_Waypoints_v1.1` folder
-6. Navigate to [ADS-B Exchange](https://globe.adsbexchange.com/) and click the extension icon

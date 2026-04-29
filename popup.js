@@ -458,7 +458,7 @@ function renderResults(fixes) {
     const procCopyText = getProcCopyText(f);
     let defaultCopy = (f.ident || "").toUpperCase();
     if (f.type === "fbo") {
-      defaultCopy = f.ident.toLowerCase();
+      defaultCopy = f.ident.replace(/\w\S*/g, w => w.charAt(0).toUpperCase() + w.substring(1).toLowerCase());
     } else if (f.type === "moa") {
       defaultCopy = f.name ? f.name.replace(/\s*MOA$/i, "").replace(/[0-9]+/g, "").replace(/\s+/g, " ").trim().toLowerCase() : f.ident;
     } else if (f.name) {

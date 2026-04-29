@@ -940,7 +940,7 @@
       preserveTrackedFlight();
 
       const procCopyText = getProcCopyText(fix);
-      const copyText = procCopyText ? procCopyText : (fix.type === "fbo" ? fix.ident.toLowerCase() : (fix.name || fix.ident).toUpperCase());
+      const copyText = procCopyText ? procCopyText : (fix.type === "fbo" ? fix.ident.replace(/\\w\\S*/g, w => w.charAt(0).toUpperCase() + w.substring(1).toLowerCase()) : (fix.name || fix.ident).toUpperCase());
       navigator.clipboard.writeText(copyText).then(() => {
         if (tooltip && !Settings.hidePopup) {
           const COPY_DURATION = 400;
@@ -983,7 +983,7 @@
     const fbo = getFboNearMouse(e);
     if (fbo) {
       preserveTrackedFlight();
-      const fboName = fbo.name.toLowerCase();
+      const fboName = fbo.name.replace(/\\w\\S*/g, w => w.charAt(0).toUpperCase() + w.substring(1).toLowerCase());
       navigator.clipboard.writeText(fboName).then(() => {
         if (tooltip && !Settings.hidePopup) {
           const COPY_DURATION = 400;
@@ -1895,7 +1895,7 @@
         lat: f.lat,
         lon: f.lon,
         procs: [],
-        copyText: f.name.toLowerCase()
+        copyText: f.name.replace(/\\w\\S*/g, w => w.charAt(0).toUpperCase() + w.substring(1).toLowerCase())
       }));
 
       showAreaResultsPanel([...moas, ...fbos, ...fixes], bbox);
@@ -1947,7 +1947,7 @@
         lat: f.lat,
         lon: f.lon,
         procs: [],
-        copyText: f.name.toLowerCase()
+        copyText: f.name.replace(/\\w\\S*/g, w => w.charAt(0).toUpperCase() + w.substring(1).toLowerCase())
       }));
 
       showAreaResultsPanel([...moas, ...fbos, ...fixes], bbox);
@@ -2129,7 +2129,7 @@
           const procCopyText = getProcCopyText(fix);
           let defaultCopy = (fix.ident || "").toUpperCase();
           if (fix.type === "fbo") {
-            defaultCopy = fix.ident.toLowerCase();
+            defaultCopy = fix.ident.replace(/\\w\\S*/g, w => w.charAt(0).toUpperCase() + w.substring(1).toLowerCase());
           } else if (fix.type === "moa") {
             defaultCopy = fix.copyText;
           } else if (fix.name) {
@@ -2502,7 +2502,7 @@
             lat: f.lat,
             lon: f.lon,
             searchStr: (f.name + " " + f.icao).toUpperCase(),
-            copyText: f.name.toLowerCase()
+            copyText: f.name.replace(/\\w\\S*/g, w => w.charAt(0).toUpperCase() + w.substring(1).toLowerCase())
           });
         }
 
@@ -2606,7 +2606,7 @@
     const dist = pt.distance != null ? pt.distance.toFixed(1) : "?";
     const displayIdent = (pt.type === "fbo") ? pt.ident : (pt.ident || "").toUpperCase();
     const procCopyText = getProcCopyText(pt);
-    const copyVal = procCopyText ? procCopyText : (pt.copyText || (pt.type === "fbo" ? pt.ident.toLowerCase() : (pt.name || pt.ident || "").toUpperCase()));
+    const copyVal = procCopyText ? procCopyText : (pt.copyText || (pt.type === "fbo" ? pt.ident.replace(/\\w\\S*/g, w => w.charAt(0).toUpperCase() + w.substring(1).toLowerCase()) : (pt.name || pt.ident || "").toUpperCase()));
     const latAttr = pt.lat != null ? ' data-lat="' + pt.lat + '"' : '';
     const lonAttr = pt.lon != null ? ' data-lon="' + pt.lon + '"' : '';
     let h = '<div class="tracker-item" data-color="' + col + '" data-cp="' + copyVal.replace(/"/g, "&quot;") + '" data-type="' + pt.type + '" data-ident="' + (pt.ident || "").toUpperCase().replace(/"/g, "&quot;") + '"' + latAttr + lonAttr + ' style="padding:6px 12px;border-bottom:1px solid #21262d;cursor:pointer;">';
