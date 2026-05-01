@@ -433,7 +433,7 @@ function renderResults(fixes) {
   const fixColor = togFixColor.value;
 
   searchResults.innerHTML = fixes.map(f => {
-    let color = f.type === "vfr" ? "#15F4EE" : f.type === "vor" ? "#58a6ff" : f.type === "ndb" ? "#f85149" : f.type === "moa" ? "rgba(230, 130, 255, 0.9)" : f.type === "fbo" ? "#DFFF00" : f.type === "airport" ? fixColor : fixColor;
+    let color = f.type === "vfr" ? "#9966CC" : f.type === "vor" ? "#58a6ff" : f.type === "ndb" ? "#f85149" : f.type === "moa" ? "rgba(230, 130, 255, 0.9)" : f.type === "fbo" ? "#DFFF00" : f.type === "airport" ? fixColor : fixColor;
     let isMythic = false;
     let pLabel = f.ident;
     let pMeta = "";
@@ -536,7 +536,7 @@ function renderResults(fixes) {
 }
 
 function typeColor(t) {
-  return t === "vfr" ? "#15F4EE" : t === "vor" ? "#58a6ff" : t === "ndb" ? "#f85149" : t === "moa" ? "rgba(230, 130, 255, 0.9)" : t === "fbo" ? "#F5F5DC" : t === "airport" ? "#3fb950" : "#3fb950";
+  return t === "vfr" ? "#9966CC" : t === "vor" ? "#58a6ff" : t === "ndb" ? "#f85149" : t === "moa" ? "rgba(230, 130, 255, 0.9)" : t === "fbo" ? "#F5F5DC" : t === "airport" ? "#3fb950" : "#3fb950";
 }
 
 function typeLabel(t) {

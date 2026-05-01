@@ -413,7 +413,16 @@ async function loadCifp() {
             let lon = parseFloat(mLon[1]) + parseFloat(mLon[2])/60 + parseFloat(mLon[3])/3600;
             if (mLon[4].toUpperCase() === 'W') lon = -lon;
 
-            FIXES.push({ ident, lat, lon, type: "fix" });
+            let procs = undefined;
+            if (split.length >= 6 && split[5]) {
+              const procStr = split[5].replace(/"/g, "").trim();
+              if (procStr) {
+                procs = [];
+                if (procStr.includes("SID")) procs.push({ proc: ident, type: "SID", airport: "", sandcat: true });
+                if (procStr.includes("STAR")) procs.push({ proc: ident, type: "STAR", airport: "", sandcat: true });
+              }
+            }
+            FIXES.push({ ident, lat, lon, type: "fix", procs });
           }
         }
       }

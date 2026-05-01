@@ -280,11 +280,12 @@
   // ── Drawing ───────────────────────────────────────────────────────────────
   const DEFAULT_FIX_COLOR = "#3fb950";
   function getColorMap() {
-    return { vfr: "#15F4EE", airport: Settings.fixColor, fix: Settings.fixColor, vor: "#58a6ff", ndb: "#f85149", fbo: "#DFFF00" };
+    return { vfr: "#9966CC", airport: Settings.fixColor, fix: Settings.fixColor, vor: "#58a6ff", ndb: "#f85149", fbo: "#DFFF00" };
   }
   function getRootProcs(fix) {
     if (!fix || !fix.procs || !fix.procs.length) return [];
     return fix.procs.filter(p => {
+      if (p.sandcat) return true;
       if (!p.proc.startsWith(fix.ident)) return false;
       const num = p.proc.substring(fix.ident.length).trim();
       return num.length > 0 && /\d/.test(num);
@@ -295,6 +296,9 @@
     const rootProcs = getRootProcs(fix);
     if (!rootProcs.length) return null;
     const p = rootProcs[0];
+    if (p.sandcat) {
+      return fix.name ? fix.name.toUpperCase() : fix.ident.toUpperCase();
+    }
     const num = p.proc.replace(fix.ident, '').trim();
     const map = {'0':'ZERO','1':'ONE','2':'TWO','3':'THREE','4':'FOUR','5':'FIVE','6':'SIX','7':'SEVEN','8':'EIGHT','9':'NINE'};
     const numWords = num.split('').map(c => map[c] || c).join('');
@@ -1035,7 +1039,8 @@
       if (rootProcs.length > 0) {
         const p = rootProcs[0];
         const num = p.proc.replace(fix.ident, '').trim();
-        html = `<span style="font-size:15px;font-weight:bold;color:${readableColor(labelColor)}">${fix.ident} ${num}</span> <span style="color:${dotColor};font-weight:700;font-size:15px;">- ${p.type}</span>`;
+        const identAndNum = `${fix.ident} ${num}`.trim();
+        html = `<span style="font-size:15px;font-weight:bold;color:${readableColor(labelColor)}">${identAndNum}</span> <span style="color:${dotColor};font-weight:700;font-size:15px;">- ${p.type}</span>`;
       }
 
       tooltip.innerHTML = html;
