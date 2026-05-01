@@ -106,6 +106,7 @@ async function ensureOurAirportsLoaded() {
 const GITHUB_RAW_BASE    = "https://raw.githubusercontent.com/KarimEssac/Sweden/main";
 const WAYPOINTS_CSV_URL  = `${GITHUB_RAW_BASE}/waypoints.csv`;
 const NAVAIDS_CSV_URL    = `${GITHUB_RAW_BASE}/navaids.csv`;
+const VFR_CSV_URL        = `${GITHUB_RAW_BASE}/VFR.csv`;
 const DATA_VERSION_URL   = `${GITHUB_RAW_BASE}/data_version.json`;
 
 // ─── Remote data version helpers ─────────────────────────────────────────────
@@ -345,9 +346,10 @@ async function loadCifp() {
 
     // ── navaids.csv: GitHub first, local cifp.zip fallback ───────────────────
     // Fetch both in parallel; if either fails we fall back to the bundled copy.
-    const [navaidsResp, waypointsResp] = await Promise.allSettled([
+    const [navaidsResp, waypointsResp, vfrResp] = await Promise.allSettled([
       fetch(NAVAIDS_CSV_URL),
-      fetch(WAYPOINTS_CSV_URL)
+      fetch(WAYPOINTS_CSV_URL),
+      fetch(VFR_CSV_URL)
     ]);
 
     let navaidsCsv = null;
@@ -412,6 +414,33 @@ async function loadCifp() {
             if (mLon[4].toUpperCase() === 'W') lon = -lon;
 
             FIXES.push({ ident, lat, lon, type: "fix" });
+          }
+        }
+      }
+    }
+
+    // ── VFR.csv: GitHub first, local cifp.zip fallback ───────────────────────
+    let vfrCsv = null;
+    if (vfrResp.status === "fulfilled" && vfrResp.value.ok) {
+      vfrCsv = await vfrResp.value.text();
+    } else {
+      const localName = Object.keys(files).find(k => /VFR\.csv/i.test(k));
+      if (localName) vfrCsv = new TextDecoder("utf-8").decode(files[localName]);
+    }
+
+    if (vfrCsv) {
+      const lines = vfrCsv.split(/\r?\n/);
+      for (let i = 1; i < lines.length; i++) {
+        if (!lines[i].trim()) continue;
+        const cols = lines[i].split(",");
+        if (cols.length >= 5) {
+          const ident   = cols[0].trim().toUpperCase();
+          const name    = cols[1].trim().toUpperCase();
+          const lat     = parseFloat(cols[3]);
+          const lon     = parseFloat(cols[4]);
+
+          if (!isNaN(lat) && !isNaN(lon)) {
+            FIXES.push({ ident, lat, lon, type: "vfr", name });
           }
         }
       }
@@ -645,13 +674,14 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
   if (msg.type === "GET_SETTINGS") {
     chrome.storage.local.get(
-      ["wpt_enabled", "wpt_showFixes", "wpt_showMoas", "wpt_showFbos", "wpt_opacity", "wpt_showBtn", "wpt_labelSize", "wpt_scaleDot", "wpt_hlProcs", "wpt_hidePopup", "wpt_fixColor", "wpt_textColor"],
+      ["wpt_enabled", "wpt_showFixes", "wpt_showMoas", "wpt_showFbos", "wpt_showVfrs", "wpt_opacity", "wpt_showBtn", "wpt_labelSize", "wpt_scaleDot", "wpt_hlProcs", "wpt_hidePopup", "wpt_fixColor", "wpt_textColor"],
       (data) => {
         sendResponse({
           enabled:       data.wpt_enabled       !== undefined ? data.wpt_enabled       : true,
           showFixes:     data.wpt_showFixes     !== undefined ? data.wpt_showFixes     : true,
           showMoas:      data.wpt_showMoas      !== undefined ? data.wpt_showMoas      : false,
           showFbos:      data.wpt_showFbos      !== undefined ? data.wpt_showFbos      : true,
+          showVfrs:      data.wpt_showVfrs      !== undefined ? data.wpt_showVfrs      : true,
           opacity:       data.wpt_opacity        !== undefined ? data.wpt_opacity       : 0.92,
           showBtn:       data.wpt_showBtn         !== undefined ? data.wpt_showBtn        : true,
           labelSize:     data.wpt_labelSize       !== undefined ? data.wpt_labelSize      : 1.0,
@@ -671,6 +701,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     if (msg.settings.enabled !== undefined) updates.wpt_enabled = msg.settings.enabled;
     if (msg.settings.showMoas !== undefined) updates.wpt_showMoas = msg.settings.showMoas;
     if (msg.settings.showFbos !== undefined) updates.wpt_showFbos = msg.settings.showFbos;
+    if (msg.settings.showVfrs !== undefined) updates.wpt_showVfrs = msg.settings.showVfrs;
     if (msg.settings.opacity !== undefined) updates.wpt_opacity = msg.settings.opacity;
     if (msg.settings.showBtn !== undefined) updates.wpt_showBtn = msg.settings.showBtn;
     if (msg.settings.labelSize !== undefined) updates.wpt_labelSize = msg.settings.labelSize;

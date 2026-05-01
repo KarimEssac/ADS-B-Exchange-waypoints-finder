@@ -6,6 +6,7 @@ const subToggles = document.getElementById("subToggles");
 const togFixes   = document.getElementById("togFixes");
 const togMoas    = document.getElementById("togMoas");
 const togFbos    = document.getElementById("togFbos");
+const togVfrs    = document.getElementById("togVfrs");
 const searchBox  = document.getElementById("searchBox");
 const searchResults = document.getElementById("searchResults");
 const togShowBtn = document.getElementById("togShowBtn");
@@ -73,7 +74,7 @@ async function ensureContentScripts(tabId) {
 }
 
 // ── Restore saved toggle states ───────────────────────────────────────────────
-chrome.storage.local.get(["wpt_enabled", "wpt_showFixes", "wpt_showMoas", "wpt_showFbos", "wpt_opacity", "wpt_showBtn", "wpt_labelSize", "wpt_scaleDot", "wpt_hlProcs", "wpt_hidePopup", "wpt_fixColor", "wpt_textColor", "wpt_textSameAsWpt"], (data) => {
+chrome.storage.local.get(["wpt_enabled", "wpt_showFixes", "wpt_showMoas", "wpt_showFbos", "wpt_showVfrs", "wpt_opacity", "wpt_showBtn", "wpt_labelSize", "wpt_scaleDot", "wpt_hlProcs", "wpt_hidePopup", "wpt_fixColor", "wpt_textColor", "wpt_textSameAsWpt"], (data) => {
   if (data.wpt_enabled !== undefined) {
     togEnabled.checked = data.wpt_enabled;
     updateSubTogglesVisuals(data.wpt_enabled);
@@ -81,6 +82,7 @@ chrome.storage.local.get(["wpt_enabled", "wpt_showFixes", "wpt_showMoas", "wpt_s
   if (data.wpt_showFixes !== undefined) togFixes.checked = data.wpt_showFixes;
   if (data.wpt_showMoas  !== undefined) togMoas.checked  = data.wpt_showMoas;
   if (data.wpt_showFbos  !== undefined) togFbos.checked  = data.wpt_showFbos;
+  if (data.wpt_showVfrs  !== undefined) togVfrs.checked  = data.wpt_showVfrs;
   if (data.wpt_opacity   !== undefined) togOpacity.value = data.wpt_opacity;
   if (data.wpt_showBtn !== undefined) togShowBtn.checked = data.wpt_showBtn;
   if (data.wpt_labelSize !== undefined) togLabelSize.value = data.wpt_labelSize;
@@ -156,6 +158,7 @@ togOpacity.addEventListener("input", () => sendToggle("opacity", parseFloat(togO
 togFixes.addEventListener("change", () => sendToggle("showFixes", togFixes.checked));
 togMoas.addEventListener("change",  () => sendToggle("showMoas",  togMoas.checked));
 togFbos.addEventListener("change",  () => sendToggle("showFbos",  togFbos.checked));
+togVfrs.addEventListener("change",  () => sendToggle("showVfrs",  togVfrs.checked));
 togShowBtn.addEventListener("change", () => sendToggle("showBtn", togShowBtn.checked));
 togLabelSize.addEventListener("input", () => sendToggle("labelSize", parseFloat(togLabelSize.value)));
 btnLabelDefault.addEventListener("click", () => {
@@ -430,7 +433,7 @@ function renderResults(fixes) {
   const fixColor = togFixColor.value;
 
   searchResults.innerHTML = fixes.map(f => {
-    let color = f.type === "vor" ? "#58a6ff" : f.type === "ndb" ? "#f85149" : f.type === "moa" ? "rgba(230, 130, 255, 0.9)" : f.type === "fbo" ? "#DFFF00" : f.type === "airport" ? fixColor : fixColor;
+    let color = f.type === "vfr" ? "#15F4EE" : f.type === "vor" ? "#58a6ff" : f.type === "ndb" ? "#f85149" : f.type === "moa" ? "rgba(230, 130, 255, 0.9)" : f.type === "fbo" ? "#DFFF00" : f.type === "airport" ? fixColor : fixColor;
     let isMythic = false;
     let pLabel = f.ident;
     let pMeta = "";
@@ -461,6 +464,8 @@ function renderResults(fixes) {
       defaultCopy = f.ident.replace(/\w\S*/g, w => w.charAt(0).toUpperCase() + w.substring(1).toLowerCase());
     } else if (f.type === "moa") {
       defaultCopy = f.name ? f.name.replace(/\s*MOA$/i, "").replace(/[0-9]+/g, "").replace(/\s+/g, " ").trim().toLowerCase() : f.ident;
+    } else if (f.type === "vfr") {
+      defaultCopy = f.name ? f.name.toUpperCase() : f.ident.toUpperCase();
     } else if (f.name) {
       defaultCopy = f.name.toUpperCase();
     }
@@ -531,11 +536,11 @@ function renderResults(fixes) {
 }
 
 function typeColor(t) {
-  return t === "vor" ? "#58a6ff" : t === "ndb" ? "#f85149" : t === "moa" ? "rgba(230, 130, 255, 0.9)" : t === "fbo" ? "#F5F5DC" : t === "airport" ? "#3fb950" : "#3fb950";
+  return t === "vfr" ? "#15F4EE" : t === "vor" ? "#58a6ff" : t === "ndb" ? "#f85149" : t === "moa" ? "rgba(230, 130, 255, 0.9)" : t === "fbo" ? "#F5F5DC" : t === "airport" ? "#3fb950" : "#3fb950";
 }
 
 function typeLabel(t) {
-  return t === "vor" ? "VOR" : t === "ndb" ? "NDB" : t === "moa" ? "MOA" : t === "fbo" ? "FBO" : t === "airport" ? "APT" : "FIX";
+  return t === "vfr" ? "VFR" : t === "vor" ? "VOR" : t === "ndb" ? "NDB" : t === "moa" ? "MOA" : t === "fbo" ? "FBO" : t === "airport" ? "APT" : "FIX";
 }
 
 // ── Restore last search on popup reopen ───────────────────────────────────────

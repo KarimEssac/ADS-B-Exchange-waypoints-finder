@@ -17,6 +17,7 @@
     showFixes: true,
     showMoas:  false,
     showFbos:  true,
+    showVfrs:  true,
     enabled:   true,
     opacity:   0.92,
     showBtn:   true,
@@ -279,7 +280,7 @@
   // ── Drawing ───────────────────────────────────────────────────────────────
   const DEFAULT_FIX_COLOR = "#3fb950";
   function getColorMap() {
-    return { airport: Settings.fixColor, fix: Settings.fixColor, vor: "#58a6ff", ndb: "#f85149", fbo: "#DFFF00" };
+    return { vfr: "#15F4EE", airport: Settings.fixColor, fix: Settings.fixColor, vor: "#58a6ff", ndb: "#f85149", fbo: "#DFFF00" };
   }
   function getRootProcs(fix) {
     if (!fix || !fix.procs || !fix.procs.length) return [];
@@ -1075,6 +1076,7 @@
 
     const types = [];
     if (Settings.showFixes) types.push("fix", "airport", "vor", "ndb");
+    if (Settings.showVfrs) types.push("vfr");
     if (!types.length && !Settings.showMoas && !Settings.showFbos) { allFixes = []; allMoas = []; allFbos = []; drawFrame(); return; }
 
     try {
@@ -1359,6 +1361,7 @@
         if (saved.showFixes     !== undefined) Settings.showFixes     = saved.showFixes;
         if (saved.showMoas      !== undefined) Settings.showMoas      = saved.showMoas;
         if (saved.showFbos      !== undefined) Settings.showFbos      = saved.showFbos;
+        if (saved.showVfrs      !== undefined) Settings.showVfrs      = saved.showVfrs;
         if (saved.opacity       !== undefined) Settings.opacity       = saved.opacity;
         if (saved.showBtn      !== undefined) Settings.showBtn      = saved.showBtn;
         if (saved.labelSize    !== undefined) Settings.labelSize    = saved.labelSize;
