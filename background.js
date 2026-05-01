@@ -418,8 +418,8 @@ async function loadCifp() {
               const procStr = split[5].replace(/"/g, "").trim();
               if (procStr) {
                 procs = [];
-                if (procStr.includes("SID")) procs.push({ proc: ident, type: "SID", airport: "", sandcat: true });
-                if (procStr.includes("STAR")) procs.push({ proc: ident, type: "STAR", airport: "", sandcat: true });
+                if (procStr.includes("SID")) procs.push({ proc: ident, type: "SID", airport: "", csvProc: true });
+                if (procStr.includes("STAR")) procs.push({ proc: ident, type: "STAR", airport: "", csvProc: true });
               }
             }
             FIXES.push({ ident, lat, lon, type: "fix", procs });

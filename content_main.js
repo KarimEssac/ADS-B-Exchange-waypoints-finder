@@ -285,7 +285,7 @@
   function getRootProcs(fix) {
     if (!fix || !fix.procs || !fix.procs.length) return [];
     return fix.procs.filter(p => {
-      if (p.sandcat) return true;
+      if (p.csvProc) return true;
       if (!p.proc.startsWith(fix.ident)) return false;
       const num = p.proc.substring(fix.ident.length).trim();
       return num.length > 0 && /\d/.test(num);
@@ -296,7 +296,7 @@
     const rootProcs = getRootProcs(fix);
     if (!rootProcs.length) return null;
     const p = rootProcs[0];
-    if (p.sandcat) {
+    if (p.csvProc) {
       return fix.name ? fix.name.toUpperCase() : fix.ident.toUpperCase();
     }
     const num = p.proc.replace(fix.ident, '').trim();
@@ -1861,7 +1861,7 @@
       const p1 = bgRequest({
         type: "GET_FIXES_IN_BBOX",
         minLat: bbox.minLat, maxLat: bbox.maxLat, minLon: bbox.minLon, maxLon: bbox.maxLon,
-        types: ["fix", "airport", "vor", "ndb"]
+        types: ["fix", "airport", "vor", "ndb", "vfr"]
       });
       const p2 = bgRequest({
         type: "GET_MOAS_IN_BBOX",
@@ -1915,7 +1915,7 @@
       const p1 = bgRequest({
         type: "GET_FIXES_IN_BBOX",
         minLat: bbox.minLat, maxLat: bbox.maxLat, minLon: bbox.minLon, maxLon: bbox.maxLon,
-        types: ["fix", "airport", "vor", "ndb"]
+        types: ["fix", "airport", "vor", "ndb", "vfr"]
       });
       const p2 = bgRequest({
         type: "GET_MOAS_IN_BBOX",
@@ -2477,7 +2477,7 @@
 
       try {
         const [res, mres, fres] = await Promise.all([
-          bgRequest({ type: "GET_FIXES_IN_BBOX", ...trackerBbox, types: ["fix", "airport", "vor", "ndb"] }),
+          bgRequest({ type: "GET_FIXES_IN_BBOX", ...trackerBbox, types: ["fix", "airport", "vor", "ndb", "vfr"] }),
           bgRequest({ type: "GET_MOAS_IN_BBOX", ...trackerBbox }),
           bgRequest({ type: "GET_FBOS_IN_BBOX", ...trackerBbox })
         ]);
@@ -2595,6 +2595,7 @@
     if (t === "fbo") return "#DFFF00";
     if (t === "vor") return "#58a6ff";
     if (t === "ndb") return "#f85149";
+    if (t === "vfr") return "#9966CC";
     return Settings.fixColor || "#3fb950";
   }
 

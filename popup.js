@@ -406,6 +406,7 @@ async function doSearch(q) {
 function getRootProcs(fix) {
   if (!fix || !fix.procs || !fix.procs.length) return [];
   return fix.procs.filter(p => {
+    if (p.csvProc) return true;
     if (!p.proc.startsWith(fix.ident)) return false;
     const num = p.proc.substring(fix.ident.length).trim();
     return num.length > 0 && /\d/.test(num);
@@ -416,6 +417,9 @@ function getProcCopyText(fix) {
   const rootProcs = getRootProcs(fix);
   if (!rootProcs.length) return null;
   const p = rootProcs[0];
+  if (p.csvProc) {
+    return fix.name ? fix.name.toUpperCase() : fix.ident.toUpperCase();
+  }
   const num = p.proc.replace(fix.ident, '').trim();
   const map = {'0':'ZERO','1':'ONE','2':'TWO','3':'THREE','4':'FOUR','5':'FIVE','6':'SIX','7':'SEVEN','8':'EIGHT','9':'NINE'};
   const numWords = num.split('').map(c => map[c] || c).join('');
