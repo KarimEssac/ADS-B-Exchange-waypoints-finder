@@ -22,13 +22,14 @@ const _routeCache = new Map(); // callsign → { ts, data } for adsbdb.com route
 
 // OurAirports name lookup (lazy-loaded)
 let _ourAirportsMap = null;      // ICAO -> name, null = not loaded
-let _ourAirportsList = null;     // [{icao, name, lat, lon, type, iata, city}] for nearby search
+let _ourAirportsList = null;     // [{icao, name, lat, lon, type, iata, city, country}] for nearby search
+let _ourAirportsInfoMap = null;  // ICAO/IATA/local -> {icao, iata, name, city, country}
 let _ourAirportsLoading = false;
 let _ourAirportsWaiters = [];
 
 function _parseOurAirportsCsv(text) {
   const lines = text.split(/\r?\n/);
-  if (!lines.length) return { map: new Map(), list: [] };
+  if (!lines.length) return { map: new Map(), list: [], infoMap: new Map() };
   const headers = lines[0].split(',').map(h => h.replace(/^"|"$/g, '').trim());
   const iIdent = headers.indexOf('ident');
   const iGps   = headers.indexOf('gps_code');
@@ -39,7 +40,9 @@ function _parseOurAirportsCsv(text) {
   const iType  = headers.indexOf('type');
   const iIata  = headers.indexOf('iata_code');
   const iCity  = headers.indexOf('municipality');
+  const iCountry = headers.indexOf('iso_country');
   const map = new Map();
+  const infoMap = new Map();
   const list = [];
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i].trim();
@@ -55,18 +58,28 @@ function _parseOurAirportsCsv(text) {
     const ident = (cols[iIdent] || '').trim().toUpperCase();
     const gps   = (cols[iGps]   || '').trim().toUpperCase();
     const local = (cols[iLocal] || '').trim().toUpperCase();
+    const iata  = (cols[iIata]  || '').trim().toUpperCase();
+    const city  = (cols[iCity]  || '').trim() || null;
+    const country = (cols[iCountry] || '').trim().toUpperCase() || null;
     const name  = (cols[iName]  || '').trim();
     if (!name) continue;
+    const icao = gps || ident;
+    const info = { icao: icao || ident || null, iata: iata || null, name: name, city: city, country: country };
+    const addInfo = (key) => { if (key && !infoMap.has(key)) infoMap.set(key, info); };
     if (ident) map.set(ident, name);
     if (gps && gps !== ident) map.set(gps, name);
     // Also index by FAA local_code (e.g. "1G0") — FlightAware URLs use these for smaller US airports
     if (local && local !== ident && local !== gps) map.set(local, name);
+    if (iata) map.set(iata, name);
+    addInfo(ident);
+    addInfo(gps);
+    addInfo(local);
+    addInfo(iata);
     // Build full list entry for nearby-airport lookups
     const lat = parseFloat(cols[iLat]);
     const lon = parseFloat(cols[iLon]);
     const aType = (cols[iType] || '').trim();
     if (!isNaN(lat) && !isNaN(lon) && (aType === 'large_airport' || aType === 'medium_airport' || aType === 'small_airport')) {
-      const icao = gps || ident;
       if (icao) {
         list.push({
           icao: icao,
@@ -74,13 +87,14 @@ function _parseOurAirportsCsv(text) {
           lat: lat,
           lon: lon,
           type: aType,
-          iata: (cols[iIata] || '').trim() || null,
-          city: (cols[iCity] || '').trim() || null
+          iata: iata || null,
+          city: city,
+          country: country
         });
       }
     }
   }
-  return { map, list };
+  return { map, list, infoMap };
 }
 
 async function ensureOurAirportsLoaded() {
@@ -93,9 +107,11 @@ async function ensureOurAirportsLoaded() {
     const parsed = _parseOurAirportsCsv(text);
     _ourAirportsMap = parsed.map;
     _ourAirportsList = parsed.list;
+    _ourAirportsInfoMap = parsed.infoMap;
   } catch(e) {
     _ourAirportsMap = new Map();
     _ourAirportsList = [];
+    _ourAirportsInfoMap = new Map();
   }
   _ourAirportsLoading = false;
   for (const r of _ourAirportsWaiters) r();
@@ -1205,8 +1221,15 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     (async () => {
       await ensureOurAirportsLoaded();
       const ident = (msg.ident || '').trim().toUpperCase();
-      const name = _ourAirportsMap.get(ident) || null;
-      sendResponse({ name });
+      const info = (_ourAirportsInfoMap && _ourAirportsInfoMap.get(ident)) || null;
+      const name = (info && info.name) || _ourAirportsMap.get(ident) || null;
+      sendResponse({
+        name,
+        icao: info ? info.icao : null,
+        iata: info ? info.iata : null,
+        city: info ? info.city : null,
+        country: info ? info.country : null
+      });
     })();
     return true;
   }
@@ -1315,7 +1338,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       }
 
       // Find nearest airport from OurAirports list (real coordinates, not CIFP procedure fixes).
-      // Returns { icao, iata } or null if nothing is within maxNm.
+      // Returns { icao, iata, country } or null if nothing is within maxNm.
       function nearestAirport(lat, lon, maxNm) {
         let best = null;
         let bestDist = Infinity;
@@ -1327,7 +1350,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           }
         }
         if (!best || bestDist > maxNm) return null;
-        return { icao: best.icao, iata: best.iata || null };
+        return { icao: best.icao, iata: best.iata || null, country: best.country || null };
       }
 
       // FIX (Bug 2 — first point includes taxi):
@@ -1359,8 +1382,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       const destInfo = nearestAirport(lastPt.lat, lastPt.lon, MAX_NM);
 
       sendResponse({
-        origin: originInfo ? { icao: originInfo.icao, iata: originInfo.iata, name: null, city: null } : null,
-        destination: destInfo ? { icao: destInfo.icao, iata: destInfo.iata, name: null, city: null } : null
+        origin: originInfo ? { icao: originInfo.icao, iata: originInfo.iata, name: null, city: null, country: originInfo.country } : null,
+        destination: destInfo ? { icao: destInfo.icao, iata: destInfo.iata, name: null, city: null, country: destInfo.country } : null
       });
     };
 

@@ -2392,11 +2392,19 @@
       async function enrichAirports(r) {
         if (r.origin && r.origin.icao && !r.origin.name) {
           var oRes = await bgRequest({ type: "GET_AIRPORT_NAME", ident: r.origin.icao }).catch(() => null);
+          if (oRes && oRes.icao) r.origin.icao = oRes.icao;
+          if (oRes && oRes.iata && !r.origin.iata) r.origin.iata = oRes.iata;
           if (oRes && oRes.name) r.origin.name = oRes.name;
+          if (oRes && oRes.city) r.origin.city = oRes.city;
+          if (oRes && oRes.country) r.origin.country = oRes.country;
         }
         if (r.destination && r.destination.icao && !r.destination.name) {
           var dRes = await bgRequest({ type: "GET_AIRPORT_NAME", ident: r.destination.icao }).catch(() => null);
+          if (dRes && dRes.icao) r.destination.icao = dRes.icao;
+          if (dRes && dRes.iata && !r.destination.iata) r.destination.iata = dRes.iata;
           if (dRes && dRes.name) r.destination.name = dRes.name;
+          if (dRes && dRes.city) r.destination.city = dRes.city;
+          if (dRes && dRes.country) r.destination.country = dRes.country;
         }
         return r;
       }
@@ -2432,7 +2440,7 @@
           if (!r || (!r.origin && !r.destination)) {
             if (gpsOriginIcao || (gpsDet && gpsDet.destination)) {
               r = r || { callsign: callsign, airline: null, origin: null, destination: null };
-              if (gpsOriginIcao) r.origin = { icao: gpsOriginIcao, iata: null, name: null, city: null };
+              if (gpsOriginIcao) r.origin = { icao: gpsOriginIcao, iata: null, name: null, city: null, country: gpsDet.origin.country || null };
               if (gpsDet && gpsDet.destination) r.destination = gpsDet.destination;
             }
           }
@@ -2845,6 +2853,30 @@
     bindTrackerItemEvents(listCont);
   }
 
+  function normalizeAirportIdent(icao) {
+    return (icao || "").trim().toUpperCase();
+  }
+
+  function isUsAirportIdent(icao, country) {
+    var id = normalizeAirportIdent(icao);
+    var cc = (country || "").trim().toUpperCase();
+    if (cc === "US") return true;
+    return id.charAt(0) === "K" || /^(PA|PF|PH|PO|PP|PG|PJ|PM|PW|TI|TJ)/.test(id);
+  }
+
+  function airportExternalUrl(icao, country) {
+    var id = normalizeAirportIdent(icao);
+    if (!id) return "#";
+    return isUsAirportIdent(id, country)
+      ? "https://www.airnav.com/airport/" + id
+      : "https://www.liveatc.net/search/?icao=" + id;
+  }
+
+  function airportExternalUrlLabel(icao, country) {
+    if (!normalizeAirportIdent(icao)) return "Open";
+    return isUsAirportIdent(icao, country) ? "Open on AirNav" : "Open on LiveATC";
+  }
+
   function renderRouteInfo() {
     var el = document.getElementById("sweden-trk-route");
     if (!el) return;
@@ -2872,20 +2904,6 @@
     var r = trackerRouteInfo;
     var h = '';
 
-    function airportUrl(icao) {
-      if (!icao) return '#';
-      var p = icao.trim().toUpperCase().charAt(0);
-      return (p === 'E' || p === 'L' || p === 'B' || p === 'U')
-        ? 'https://www.liveatc.net/search/?icao=' + icao.trim().toUpperCase()
-        : 'https://www.airnav.com/airport/' + icao.trim().toUpperCase();
-    }
-    function airportUrlLabel(icao) {
-      if (!icao) return 'Open';
-      var p = icao.trim().toUpperCase().charAt(0);
-      return (p === 'E' || p === 'L' || p === 'B' || p === 'U') ? 'Open on LiveATC' : 'Open on AirNav';
-    }
-
-
     // Airline / callsign row
     if (r.airline && r.airline.name) {
       var airlineRadio = r.airline.callsign ? ' (' + r.airline.callsign + ')' : '';
@@ -2905,16 +2923,16 @@
     if (r.origin) {
       var oIcao = r.origin.icao || '????';
       var oIata = r.origin.iata ? ' (' + r.origin.iata + ')' : '';
-      var oUrl = airportUrl(oIcao);
-      var oUrlLabel = airportUrlLabel(oIcao);
+      var oUrl = airportExternalUrl(oIcao, r.origin.country);
+      var oUrlLabel = airportExternalUrlLabel(oIcao, r.origin.country);
       var oName = r.origin.name || '';
 
       var destBlock;
       if (r.destination && r.destination.icao) {
         var dIcao = r.destination.icao;
         var dIata = r.destination.iata ? ' (' + r.destination.iata + ')' : '';
-        var dUrl = airportUrl(dIcao);
-        var dUrlLabel = airportUrlLabel(dIcao);
+        var dUrl = airportExternalUrl(dIcao, r.destination.country);
+        var dUrlLabel = airportExternalUrlLabel(dIcao, r.destination.country);
         var dName = r.destination.name || '';
         destBlock = '<a href="' + dUrl + '" target="_blank" rel="noopener" style="color:#f85149;font-weight:bold;font-size:14px;font-family:monospace;text-decoration:none;border-bottom:1px dashed #f8514966;" title="' + dUrlLabel + '">' + dIcao + '<span style="color:#8b949e;font-size:10px;font-weight:normal;">' + dIata + '</span></a>'
           + '<span style="color:#c9d1d9;font-size:11px;margin-top:3px;text-align:center;white-space:normal;word-break:break-word;max-width:130px;line-height:1.3;">' + (dName || '<span style="color:#484f58;font-style:italic;">name unavailable</span>') + '</span>';
@@ -3164,10 +3182,7 @@
       var typeLabel = a.type === 'large_airport' ? 'LRG' : a.type === 'medium_airport' ? 'MED' : 'SML';
       var typeColor = a.type === 'large_airport' ? '#58a6ff' : a.type === 'medium_airport' ? '#3fb950' : '#8b949e';
       var iataStr = a.iata ? ' (' + a.iata + ')' : '';
-      var _p = (a.icao || '').trim().toUpperCase().charAt(0);
-      var url = (_p === 'E' || _p === 'L' || _p === 'B' || _p === 'U')
-        ? 'https://www.liveatc.net/search/?icao=' + (a.icao || '').trim().toUpperCase()
-        : 'https://www.airnav.com/airport/' + a.icao;
+      var url = airportExternalUrl(a.icao, a.country);
       h += '<div class="sw-nearby-item" data-url="' + url + '" data-lat="' + a.lat + '" data-lon="' + a.lon + '" style="display:block;padding:8px 12px;border-bottom:1px solid #21262d;cursor:pointer;transition:background 0.1s;">'
         + '<div style="display:flex;align-items:baseline;justify-content:space-between;">'
         + '<div style="display:flex;align-items:baseline;gap:6px;min-width:0;flex:1;">'
