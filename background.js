@@ -162,7 +162,7 @@ const DB_NAME = "AdsbWptCache";
 const STORE_NAME = "fixes";
 const MOAS_STORE = "moas";
 const FBOS_STORE = "fbos";
-const CACHE_VERSION = 26; // Nuclear option — only bump for CIFP binary/schema changes.
+const CACHE_VERSION = 27; // Nuclear option — only bump for CIFP binary/schema changes.
                           // For CSV data updates, edit data_version.json instead.
 
 function openDb() {
@@ -393,7 +393,24 @@ async function loadCifp() {
           if (typeRaw.includes("VOR") || typeRaw.includes("TACAN")) type = "vor";
 
           if (!isNaN(lat) && !isNaN(lon)) {
-            FIXES.push({ ident, lat, lon, type, name });
+            let procs = undefined;
+            if (cols.length >= 8 && cols[7]) {
+              const procStr = cols[7].replace(/"/g, "").trim();
+              if (procStr && procStr.includes(":")) {
+                procs = [];
+                const sections = procStr.split(";");
+                for (const sec of sections) {
+                  const colonIdx = sec.indexOf(":");
+                  if (colonIdx < 0) continue;
+                  const ptype = sec.substring(0, colonIdx).trim();
+                  const names = sec.substring(colonIdx + 1).split("|").map(n => n.trim()).filter(Boolean);
+                  for (const pname of names) {
+                    procs.push({ proc: pname, type: ptype, airport: "", csvProc: true });
+                  }
+                }
+              }
+            }
+            FIXES.push({ ident, lat, lon, type, name, procs });
           }
         }
       }
@@ -434,8 +451,23 @@ async function loadCifp() {
               const procStr = split[5].replace(/"/g, "").trim();
               if (procStr) {
                 procs = [];
-                if (procStr.includes("SID")) procs.push({ proc: ident, type: "SID", airport: "", csvProc: true });
-                if (procStr.includes("STAR")) procs.push({ proc: ident, type: "STAR", airport: "", csvProc: true });
+                // New format: "SID:VEBIT 1D|VEBIT 4E;STAR:FRIBU 1R"
+                if (procStr.includes(":")) {
+                  const sections = procStr.split(";");
+                  for (const sec of sections) {
+                    const colonIdx = sec.indexOf(":");
+                    if (colonIdx < 0) continue;
+                    const type = sec.substring(0, colonIdx).trim();
+                    const names = sec.substring(colonIdx + 1).split("|").map(n => n.trim()).filter(Boolean);
+                    for (const name of names) {
+                      procs.push({ proc: name, type, airport: "", csvProc: true });
+                    }
+                  }
+                } else {
+                  // Legacy format: plain "SID" or "STAR" or "SID/STAR"
+                  if (procStr.includes("SID")) procs.push({ proc: ident, type: "SID", airport: "", csvProc: true });
+                  if (procStr.includes("STAR")) procs.push({ proc: ident, type: "STAR", airport: "", csvProc: true });
+                }
               }
             }
             FIXES.push({ ident, lat, lon, type: "fix", procs });

@@ -292,13 +292,139 @@
     });
   }
 
+  // Convert a proc variant suffix to ATC readback (e.g., "1D" -> "ONE DELTA")
+  function procVariantReadback(procName) {
+    const map = {'0':'ZERO','1':'ONE','2':'TWO','3':'THREE','4':'FOUR','5':'FIVE','6':'SIX','7':'SEVEN','8':'EIGHT','9':'NINE'};
+    const nato = {'A':'ALPHA','B':'BRAVO','C':'CHARLIE','D':'DELTA','E':'ECHO','F':'FOXTROT','G':'GOLF','H':'HOTEL',
+      'J':'JULIET','K':'KILO','L':'LIMA','M':'MIKE','N':'NOVEMBER','P':'PAPA','Q':'QUEBEC','R':'ROMEO',
+      'S':'SIERRA','T':'TANGO','U':'UNIFORM','V':'VICTOR','W':'WHISKEY','X':'XRAY','Y':'YANKEE','Z':'ZULU'};
+    // Extract suffix: "VEBIT 1D" -> "1D"
+    const parts = procName.trim().split(/\s+/);
+    if (parts.length < 2) return procName.toUpperCase();
+    const ident = parts[0].toUpperCase();
+    const suffix = parts.slice(1).join(' ').toUpperCase();
+    const words = suffix.split('').map(c => map[c] || nato[c] || c).join(' ');
+    return `${ident} ${words}`;
+  }
+
+  // Check if fix has charted procedure variants (enriched CSV data)
+  function hasMultipleVariants(fix) {
+    const rp = getRootProcs(fix);
+    if (rp.length < 1) return false;
+    // True if any csvProc has a specific charted name (e.g., "BERSU 2G" != "BERSU")
+    return rp.some(p => p.csvProc && p.proc !== fix.ident);
+  }
+
+  // Persistent variants popup state
+  let _variantsPopup = null;
+  let _variantsPopupFix = null;
+  let _hoveredMultiVarFix = null; // currently hovered fix with variants
+  let _hoveredMultiVarPos = null; // { x, y } of last hover position
+
+  function closeVariantsPopup() {
+    if (_variantsPopup) { _variantsPopup.remove(); _variantsPopup = null; _variantsPopupFix = null; }
+  }
+
+  function openVariantsPopup(fix, anchorX, anchorY) {
+    closeVariantsPopup();
+    _variantsPopupFix = fix;
+    const rootProcs = getRootProcs(fix);
+    const popup = document.createElement('div');
+    popup.id = 'wpt-variants-popup';
+    popup.style.cssText = `position:fixed;left:${anchorX}px;top:${anchorY}px;background:rgba(8,12,20,0.97);`
+      + 'border:1px solid #30363d;border-radius:8px;padding:0;font-family:monospace;font-size:12px;'
+      + 'z-index:100000;box-shadow:0 8px 32px rgba(0,0,0,0.7);min-width:160px;max-height:300px;overflow-y:auto;';
+    // Inject scrollbar styles
+    if (!document.getElementById('wpt-var-scrollbar-style')) {
+      const styleEl = document.createElement('style');
+      styleEl.id = 'wpt-var-scrollbar-style';
+      styleEl.textContent = '#wpt-variants-popup::-webkit-scrollbar{width:6px}'
+        + '#wpt-variants-popup::-webkit-scrollbar-track{background:rgba(13,17,23,0.6);border-radius:3px}'
+        + '#wpt-variants-popup::-webkit-scrollbar-thumb{background:rgba(88,166,255,0.35);border-radius:3px}'
+        + '#wpt-variants-popup::-webkit-scrollbar-thumb:hover{background:rgba(88,166,255,0.55)}';
+      document.head.appendChild(styleEl);
+    }
+
+    // Header with close button
+    const hasSid = rootProcs.some(p => p.type === 'SID');
+    const hasStar = rootProcs.some(p => p.type === 'STAR');
+    const isWaypoint = fix.type === 'fix' || !fix.type;
+    const TYPE_COLOR = { vor: '#58a6ff', ndb: '#f85149', vfr: '#9966CC' };
+    const typeLabel = isWaypoint
+      ? (hasSid && hasStar ? 'SID / STAR' : hasSid ? 'SID' : 'STAR')
+      : (fix.type === 'vor' ? 'VOR' : fix.type === 'ndb' ? 'NDB' : fix.type === 'vfr' ? 'VFR' : fix.type.toUpperCase());
+    const headerColor = isWaypoint ? (hasSid ? '#ff9e22' : '#00cfcf') : (TYPE_COLOR[fix.type] || '#e6edf3');
+    let h = '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px 6px;border-bottom:1px solid #21262d;">'
+      + `<span style="color:${headerColor};font-weight:bold;font-size:13px;">${fix.ident} — ${typeLabel}</span>`
+      + '<span id="wpt-variants-close" style="cursor:pointer;color:#8b949e;font-size:16px;line-height:1;padding:0 2px;">&times;</span>'
+      + '</div>';
+
+    // Plain ident option
+    h += `<div class="wpt-var-item" data-copy="${fix.ident}" style="padding:6px 12px;cursor:pointer;color:${headerColor};border-bottom:1px solid #161b22;transition:background 0.1s;">`
+      + `${fix.ident}</div>`;
+
+    // SID variants
+    const sids = rootProcs.filter(p => p.type === 'SID');
+    const stars = rootProcs.filter(p => p.type === 'STAR');
+    if (sids.length > 0) {
+      for (const s of sids) {
+        const readback = procVariantReadback(s.proc);
+        const sidColor = isWaypoint ? '#ff9e22' : headerColor;
+        h += `<div class="wpt-var-item" data-copy="${readback}" style="padding:6px 12px;cursor:pointer;color:${sidColor};border-bottom:1px solid #161b22;transition:background 0.1s;">`
+          + `${s.proc}</div>`;
+      }
+    }
+    if (stars.length > 0) {
+      for (const s of stars) {
+        const readback = procVariantReadback(s.proc);
+        const starColor = isWaypoint ? '#00cfcf' : headerColor;
+        h += `<div class="wpt-var-item" data-copy="${readback}" style="padding:6px 12px;cursor:pointer;color:${starColor};border-bottom:1px solid #161b22;transition:background 0.1s;">`
+          + `${s.proc}</div>`;
+      }
+    }
+
+    popup.innerHTML = h;
+    document.body.appendChild(popup);
+    _variantsPopup = popup;
+
+    // Keep popup within viewport
+    const rect = popup.getBoundingClientRect();
+    if (rect.right > window.innerWidth) popup.style.left = (window.innerWidth - rect.width - 8) + 'px';
+    if (rect.bottom > window.innerHeight) popup.style.top = (window.innerHeight - rect.height - 8) + 'px';
+
+    // Close button
+    popup.querySelector('#wpt-variants-close').addEventListener('click', (ev) => { ev.stopPropagation(); closeVariantsPopup(); });
+
+    // Click-to-copy on each item
+    popup.querySelectorAll('.wpt-var-item').forEach(item => {
+      item.addEventListener('mouseover', () => { item.style.background = 'rgba(88,166,255,0.15)'; });
+      item.addEventListener('mouseout', () => { item.style.background = 'transparent'; });
+      item.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        const text = item.getAttribute('data-copy');
+        navigator.clipboard.writeText(text).then(() => {
+          item.style.background = 'rgba(63,185,80,0.25)';
+          const origText = item.textContent;
+          item.textContent = 'Copied!';
+          setTimeout(() => { item.textContent = origText; item.style.background = 'transparent'; }, 400);
+        });
+      });
+    });
+  }
+
   function getProcCopyText(fix) {
     const rootProcs = getRootProcs(fix);
     if (!rootProcs.length) return null;
+    // Only apply proc copy behavior to waypoints, not navaids/VFR
+    if (fix.type !== "fix") return null;
     const p = rootProcs[0];
+    // Multi-variant CSV procs: just copy the ident on normal click
+    if (p.csvProc && hasMultipleVariants(fix)) return null;
     if (p.csvProc) {
-      return fix.name ? fix.name.toUpperCase() : fix.ident.toUpperCase();
+      // Single variant CSV proc — copy readback
+      return procVariantReadback(p.proc);
     }
+    // CIFP (US) procs — keep existing behavior with DEPARTURE/ARRIVAL
     const num = p.proc.replace(fix.ident, '').trim();
     const map = {'0':'ZERO','1':'ONE','2':'TWO','3':'THREE','4':'FOUR','5':'FIVE','6':'SIX','7':'SEVEN','8':'EIGHT','9':'NINE'};
     const numWords = num.split('').map(c => map[c] || c).join('');
@@ -597,7 +723,7 @@
         let isMythic = false;
 
         const rootProcs = getRootProcs(fix);
-        if (Settings.hlProcs && rootProcs.length > 0) {
+        if (Settings.hlProcs && rootProcs.length > 0 && fix.type === "fix") {
           const hasSid = rootProcs.some(p => p.type === 'SID');
           color = hasSid ? "#ff9e22" : "#00cfcf"; // Darker red for SID, darker cyan for STAR
           isMythic = true;
@@ -953,7 +1079,7 @@
           
           let color = getColorMap()[fix.type] || Settings.fixColor;
           const rootProcs = getRootProcs(fix);
-          if (Settings.hlProcs && rootProcs.length > 0) {
+          if (Settings.hlProcs && rootProcs.length > 0 && fix.type === "fix") {
             const hasSid = rootProcs.some(p => p.type === 'SID');
             color = hasSid ? "#ff9e22" : "#00cfcf";
           }
@@ -1025,7 +1151,7 @@
 
       const rootProcs = getRootProcs(fix);
 
-      if (Settings.hlProcs && rootProcs.length > 0) {
+      if (Settings.hlProcs && rootProcs.length > 0 && fix.type === "fix") {
         const hasSid = rootProcs.some(p => p.type === 'SID');
         dotColor = hasSid ? "#ff9e22" : "#00cfcf";
         isMythic = true;
@@ -1035,19 +1161,46 @@
       const label = fix.type === "fbo" ? fix.ident.toUpperCase() : (fix.name ? `${fix.ident} (${fix.name})` : fix.ident);
       let html = `<span style="font-size:15px;font-weight:bold;color:${readableColor(labelColor)}">${label}</span>`;
 
+      // For non-waypoint types with variants, still enable Ctrl popup
+      if (fix.type !== "fix" && hasMultipleVariants(fix)) {
+        _hoveredMultiVarFix = fix;
+        // Show normal label with (+) Ctrl hint
+        html += ` <span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:4px;background:rgba(88,166,255,0.15);border:1px solid rgba(88,166,255,0.35);color:#58a6ff;font-size:13px;font-weight:bold;margin-left:5px;line-height:1;vertical-align:middle;">+</span>`
+            + `<span style="color:#484f58;font-size:10px;margin-left:4px;font-style:italic;">Ctrl</span>`;
+      }
+
       // Show SID/STAR: only the number and type for procedures named after this fix
-      if (rootProcs.length > 0) {
+      if (rootProcs.length > 0 && fix.type === "fix") {
         const p = rootProcs[0];
-        const num = p.proc.replace(fix.ident, '').trim();
-        const identAndNum = `${fix.ident} ${num}`.trim();
-        html = `<span style="font-size:15px;font-weight:bold;color:${readableColor(labelColor)}">${identAndNum}</span> <span style="color:${dotColor};font-weight:700;font-size:15px;">- ${p.type}</span>`;
+        const multiVar = hasMultipleVariants(fix);
+        if (multiVar) {
+          // Multi-variant: show ident + type + (+) button
+          const hasSid = rootProcs.some(pp => pp.type === 'SID');
+          const hasStar = rootProcs.some(pp => pp.type === 'STAR');
+          const typeLabel = hasSid && hasStar ? 'SID/STAR' : hasSid ? 'SID' : 'STAR';
+          _hoveredMultiVarFix = fix;
+          html = `<span style="font-size:15px;font-weight:bold;color:${readableColor(labelColor)}">${fix.ident}</span>`
+            + ` <span style="color:${dotColor};font-weight:700;font-size:15px;">- ${typeLabel}</span>`
+            + ` <span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:4px;background:rgba(88,166,255,0.15);border:1px solid rgba(88,166,255,0.35);color:#58a6ff;font-size:13px;font-weight:bold;margin-left:5px;line-height:1;vertical-align:middle;">+</span>`
+            + `<span style="color:#484f58;font-size:10px;margin-left:4px;font-style:italic;">Ctrl</span>`;
+        } else {
+          const num = p.proc.replace(fix.ident, '').trim();
+          const identAndNum = `${fix.ident} ${num}`.trim();
+          html = `<span style="font-size:15px;font-weight:bold;color:${readableColor(labelColor)}">${identAndNum}</span> <span style="color:${dotColor};font-weight:700;font-size:15px;">- ${p.type}</span>`;
+        }
       }
 
       tooltip.innerHTML = html;
       tooltip.style.display = "block";
       tooltip.style.left = (e.clientX + 16) + "px";
       tooltip.style.top  = (e.clientY - 8) + "px";
+      // Track hover position for Ctrl shortcut
+      if (_hoveredMultiVarFix) {
+        _hoveredMultiVarPos = { x: e.clientX + 16, y: e.clientY + 20 };
+      }
     } else {
+      _hoveredMultiVarFix = null;
+      _hoveredMultiVarPos = null;
       // Fallback: check MOA hover (since MOAs are polygons, they are not strictly point-based active hitboxes)
       const moa = getMoaNearMouse(e);
       if (moa && !Settings.hidePopup) {
@@ -1061,6 +1214,28 @@
       tooltip.style.display = "none";
     }
   }
+
+  // ── Ctrl shortcut for variants popup ───────────────────────────────────────────
+  window.addEventListener('keydown', function(e) {
+    if (e.key === 'Control' && _hoveredMultiVarFix && !_variantsPopup) {
+      const pos = _hoveredMultiVarPos || { x: 200, y: 200 };
+      openVariantsPopup(_hoveredMultiVarFix, pos.x, pos.y);
+      if (tooltip) tooltip.style.display = 'none';
+    }
+  });
+  window.addEventListener('keyup', function(e) {
+    if (e.key === 'Control' && _variantsPopup) {
+      closeVariantsPopup();
+    }
+  });
+  // Block Ctrl+scroll zoom when variants popup is open
+  window.addEventListener('wheel', function(e) {
+    if (e.ctrlKey && _variantsPopup) {
+      e.preventDefault();
+      // Scroll the popup content instead
+      _variantsPopup.scrollTop += e.deltaY;
+    }
+  }, { passive: false });
 
   // ── Load fixes from background ────────────────────────────────────────────
   async function loadFixesForView() {
@@ -1998,6 +2173,10 @@
     closeBtn.textContent = "×";
     closeBtn.style.cssText = "cursor:pointer; color:#8b949e; font-size:18px; line-height:1; padding: 0 2px;";
     closeBtn.addEventListener("click", () => {
+      closeVariantsPopup();
+      window.removeEventListener('keydown', onAreaCtrlDown);
+      window.removeEventListener('keyup', onAreaCtrlUp);
+      window.removeEventListener('wheel', onAreaWheel);
       panel.remove();
       const qab4 = document.getElementById("wpt-quick-access-btn");
       if (qab4) qab4.style.display = "flex";
@@ -2119,10 +2298,13 @@
         row.addEventListener("mouseover", () => { 
           row.style.background = "#21262d"; 
           _highlightIdent = fix.ident;
+          _areaHoveredFix = fix;
+          _areaHoveredRow = row;
         });
         row.addEventListener("mouseout", () => { 
           row.style.background = i % 2 === 0 ? "#0d1117" : "#161b22"; 
           if (_highlightIdent === fix.ident) _highlightIdent = null;
+          if (_areaHoveredFix === fix) { _areaHoveredFix = null; _areaHoveredRow = null; }
         });
         row.addEventListener("contextmenu", (e) => {
           e.preventDefault();
@@ -2134,19 +2316,25 @@
           }
         });
         row.addEventListener("click", () => {
-          const procCopyText = getProcCopyText(fix);
-          let defaultCopy = (fix.ident || "").toUpperCase();
-          if (fix.type === "fbo") {
-            defaultCopy = fix.ident.replace(/\\w\\S*/g, w => w.charAt(0).toUpperCase() + w.substring(1).toLowerCase());
-          } else if (fix.type === "moa") {
-            defaultCopy = fix.copyText;
-          } else if (fix.name) {
-            defaultCopy = fix.name.toUpperCase();
+          let txt;
+          if (multiVar) {
+            // Variant procs: just copy the ident
+            txt = fix.ident.toUpperCase();
+          } else {
+            const procCopyText = getProcCopyText(fix);
+            let defaultCopy = (fix.ident || "").toUpperCase();
+            if (fix.type === "fbo") {
+              defaultCopy = fix.ident.replace(/\\w\\S*/g, w => w.charAt(0).toUpperCase() + w.substring(1).toLowerCase());
+            } else if (fix.type === "moa") {
+              defaultCopy = fix.copyText;
+            } else if (fix.name) {
+              defaultCopy = fix.name.toUpperCase();
+            }
+            txt = procCopyText ? procCopyText : defaultCopy;
           }
-          const txt = procCopyText ? procCopyText : defaultCopy;
           navigator.clipboard.writeText(txt).then(() => {
             const originalHTML = identEl.innerHTML;
-            identEl.innerHTML = "\u2713 Copied!";
+            identEl.innerHTML = "Copied!";
             setTimeout(() => { identEl.innerHTML = originalHTML; }, 800);
           });
         });
@@ -2159,20 +2347,28 @@
 
         const rootProcs = getRootProcs(fix);
 
-        if (Settings.hlProcs && rootProcs.length > 0) {
+        const multiVar = hasMultipleVariants(fix);
+        if (Settings.hlProcs && rootProcs.length > 0 && fix.type === "fix") {
           const hasSid = rootProcs.some(p => p.type === 'SID');
           c = hasSid ? "#ff9e22" : "#00cfcf";
           isMythic = true;
-          const p = rootProcs[0];
-          const num = p.proc.replace(fix.ident, '').trim();
-          pLabel = `${fix.ident} ${num}`;
-          pText = ` - ${p.type}`;
-        } else if (!Settings.hlProcs && rootProcs.length > 0) {
-          // If highlighting off, still show the proc number and type to identify it
-          const p = rootProcs[0];
-          const num = p.proc.replace(fix.ident, '').trim();
-          pLabel = `${fix.ident} ${num}`;
-          pText = ` - ${p.type}`;
+          if (multiVar) {
+            pLabel = fix.ident;
+          } else {
+            const p = rootProcs[0];
+            const num = p.proc.replace(fix.ident, '').trim();
+            pLabel = `${fix.ident} ${num}`;
+            pText = ` - ${p.type}`;
+          }
+        } else if (!Settings.hlProcs && rootProcs.length > 0 && fix.type === "fix") {
+          if (multiVar) {
+            pLabel = fix.ident;
+          } else {
+            const p = rootProcs[0];
+            const num = p.proc.replace(fix.ident, '').trim();
+            pLabel = `${fix.ident} ${num}`;
+            pText = ` - ${p.type}`;
+          }
         }
 
         dot.style.cssText = `width:8px; height:8px; border-radius:50%; background:${c}; flex-shrink:0;${isMythic ? ` box-shadow: 0 0 5px ${c};` : ""}`;
@@ -2194,9 +2390,18 @@
           row.appendChild(name);
         }
 
+        // (+) Ctrl badge for variant procs — before the type label
+        if (multiVar) {
+          const plusBadge = document.createElement('span');
+          plusBadge.innerHTML = '<span style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:3px;background:rgba(88,166,255,0.15);border:1px solid rgba(88,166,255,0.35);color:#58a6ff;font-size:10px;font-weight:bold;line-height:1;">+</span>'
+            + '<span style="color:#484f58;font-size:9px;margin-left:2px;font-style:italic;">Ctrl</span>';
+          plusBadge.style.cssText = 'display:inline-flex;align-items:center;gap:1px;margin-left:auto;flex-shrink:0;';
+          row.appendChild(plusBadge);
+        }
+
         const type = document.createElement("span");
         type.textContent = fix.type;
-        type.style.cssText = "font-size:9px; color:#484f58; margin-left:auto; text-transform:uppercase; flex-shrink:0;";
+        type.style.cssText = "font-size:9px; color:#484f58; margin-left:" + (multiVar ? "4px" : "auto") + "; text-transform:uppercase; flex-shrink:0;";
         row.appendChild(type);
 
         list.appendChild(row);
@@ -2213,6 +2418,38 @@
 
     panel.appendChild(list);
     document.body.appendChild(panel);
+
+    // Ctrl shortcut for variants popup in area selection
+    let _areaHoveredFix = null;
+    let _areaHoveredRow = null;
+    function onAreaCtrlDown(e) {
+      if (e.key === 'Control' && _areaHoveredFix && hasMultipleVariants(_areaHoveredFix) && !_variantsPopup) {
+        const rect = _areaHoveredRow.getBoundingClientRect();
+        const panelRect = panel.getBoundingClientRect();
+        const panelCenter = panelRect.left + panelRect.width / 2;
+        const screenCenter = window.innerWidth / 2;
+        if (panelCenter > screenCenter) {
+          // Panel is on the right — open popup to the left
+          openVariantsPopup(_areaHoveredFix, rect.left - 4, rect.top);
+          // Reposition after render so we know the popup width
+          if (_variantsPopup) {
+            const pw = _variantsPopup.getBoundingClientRect().width;
+            _variantsPopup.style.left = (rect.left - pw - 4) + 'px';
+          }
+        } else {
+          openVariantsPopup(_areaHoveredFix, rect.right + 4, rect.top);
+        }
+      }
+    }
+    function onAreaCtrlUp(e) {
+      if (e.key === 'Control' && _variantsPopup) closeVariantsPopup();
+    }
+    function onAreaWheel(e) {
+      if (e.ctrlKey && _variantsPopup) { e.preventDefault(); _variantsPopup.scrollTop += e.deltaY; }
+    }
+    window.addEventListener('keydown', onAreaCtrlDown);
+    window.addEventListener('keyup', onAreaCtrlUp);
+    window.addEventListener('wheel', onAreaWheel, { passive: false });
 
     // Make panel draggable
     let isDragging = false, dragOffX = 0, dragOffY = 0;
@@ -2620,21 +2857,39 @@
   function buildTrackerItemHtml(pt) {
     let col = getTrackerTypeColor(pt.type);
     const rootProcs = getRootProcs(pt);
-    if (Settings.hlProcs && rootProcs.length > 0) {
+    if (Settings.hlProcs && rootProcs.length > 0 && pt.type === "fix") {
       col = rootProcs.some(p => p.type === 'SID') ? "#ff9e22" : "#00cfcf";
     }
+    const multiVar = hasMultipleVariants(pt);
     const dist = pt.distance != null ? pt.distance.toFixed(1) : "?";
     const displayIdent = (pt.type === "fbo") ? pt.ident : (pt.ident || "").toUpperCase();
-    const procCopyText = getProcCopyText(pt);
-    const copyVal = procCopyText ? procCopyText : (pt.copyText || (pt.type === "fbo" ? pt.ident.replace(/\\w\\S*/g, w => w.charAt(0).toUpperCase() + w.substring(1).toLowerCase()) : (pt.name || pt.ident || "").toUpperCase()));
+    let copyVal;
+    if (multiVar) {
+      copyVal = (pt.ident || "").toUpperCase();
+    } else {
+      const procCopyText = getProcCopyText(pt);
+      copyVal = procCopyText ? procCopyText : (pt.copyText || (pt.type === "fbo" ? pt.ident.replace(/\\w\\S*/g, w => w.charAt(0).toUpperCase() + w.substring(1).toLowerCase()) : (pt.name || pt.ident || "").toUpperCase()));
+    }
     const latAttr = pt.lat != null ? ' data-lat="' + pt.lat + '"' : '';
     const lonAttr = pt.lon != null ? ' data-lon="' + pt.lon + '"' : '';
-    let h = '<div class="tracker-item" data-color="' + col + '" data-cp="' + copyVal.replace(/"/g, "&quot;") + '" data-type="' + pt.type + '" data-ident="' + (pt.ident || "").toUpperCase().replace(/"/g, "&quot;") + '"' + latAttr + lonAttr + ' style="padding:6px 12px;border-bottom:1px solid #21262d;cursor:pointer;">';
+    // Store variant proc data for Ctrl popup
+    let varAttr = '';
+    if (multiVar) {
+      const varData = rootProcs.map(p => ({ proc: p.proc, type: p.type }));
+      varAttr = ' data-variants="' + JSON.stringify(varData).replace(/"/g, '&quot;') + '"';
+    }
+    let h = '<div class="tracker-item" data-color="' + col + '" data-cp="' + copyVal.replace(/"/g, "&quot;") + '" data-type="' + pt.type + '" data-ident="' + (pt.ident || "").toUpperCase().replace(/"/g, "&quot;") + '"' + latAttr + lonAttr + varAttr + ' style="padding:6px 12px;border-bottom:1px solid #21262d;cursor:pointer;">';
     h += '<div style="display:flex;align-items:baseline;justify-content:space-between;">';
-    h += '<div style="color:' + col + ';font-weight:bold;font-size:13px;">' + displayIdent;
+    h += '<div style="color:' + col + ';font-weight:bold;font-size:13px;display:flex;align-items:center;gap:4px;">' + displayIdent;
     if (pt.name && pt.type !== "fbo") h += ' <span style="color:#8b949e;font-size:11px;font-weight:normal;">' + pt.name + '</span>';
     h += "</div>";
-    h += '<div style="font-size:11px;color:#8b949e;">' + dist + ' NM</div>';
+    h += '<div style="display:flex;align-items:center;gap:4px;">';
+    if (multiVar) {
+      h += '<span style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:3px;background:rgba(88,166,255,0.15);border:1px solid rgba(88,166,255,0.35);color:#58a6ff;font-size:10px;font-weight:bold;line-height:1;">+</span>';
+      h += '<span style="color:#484f58;font-size:9px;font-style:italic;">Ctrl</span>';
+    }
+    h += '<span style="font-size:11px;color:#8b949e;">' + dist + ' NM</span>';
+    h += '</div>';
     h += "</div>";
     h += '<div style="font-size:10px;text-transform:uppercase;color:#484f58;margin-top:1px;">' + pt.type + "</div>";
     h += "</div>";
@@ -2645,11 +2900,53 @@
     if (listCont.dataset.eventsBound) return;
     listCont.dataset.eventsBound = "true";
 
+    // Track hovered tracker item for Ctrl popup
+    var _trackerHoveredRow = null;
+
+    function onTrackerCtrlDown(e) {
+      if (e.key === 'Control' && _trackerHoveredRow && _trackerHoveredRow.hasAttribute('data-variants') && !_variantsPopup) {
+        var varData = JSON.parse(_trackerHoveredRow.getAttribute('data-variants'));
+        var ident = _trackerHoveredRow.getAttribute('data-ident');
+        var col = _trackerHoveredRow.getAttribute('data-color');
+        var rect = _trackerHoveredRow.getBoundingClientRect();
+        var panelEl = listCont.closest('[id]');
+        var panelRect = panelEl ? panelEl.getBoundingClientRect() : rect;
+        var panelCenter = panelRect.left + panelRect.width / 2;
+        var screenCenter = window.innerWidth / 2;
+        // Build a fake fix for openVariantsPopup
+        var fixType = _trackerHoveredRow.getAttribute('data-type') || 'fix';
+        var fakeFix = { ident: ident, type: fixType, procs: varData.map(function(v) { return { proc: v.proc, type: v.type, csvProc: true }; }) };
+        if (panelCenter > screenCenter) {
+          openVariantsPopup(fakeFix, rect.left - 4, rect.top);
+          if (_variantsPopup) {
+            var pw = _variantsPopup.getBoundingClientRect().width;
+            _variantsPopup.style.left = (rect.left - pw - 4) + 'px';
+          }
+        } else {
+          openVariantsPopup(fakeFix, rect.right + 4, rect.top);
+        }
+      }
+    }
+    function onTrackerCtrlUp(e) {
+      if (e.key === 'Control' && _variantsPopup) closeVariantsPopup();
+    }
+    function onTrackerWheel(e) {
+      if (e.ctrlKey && _variantsPopup) { e.preventDefault(); _variantsPopup.scrollTop += e.deltaY; }
+    }
+    window.addEventListener('keydown', onTrackerCtrlDown);
+    window.addEventListener('keyup', onTrackerCtrlUp);
+    window.addEventListener('wheel', onTrackerWheel, { passive: false });
+
     listCont.addEventListener("mouseover", function (e) {
       const r = e.target.closest(".tracker-item");
       if (r) {
         r.style.background = "#21262d";
         _highlightIdent = r.getAttribute("data-ident") || null;
+        _trackerHoveredRow = r;
+        // Blur search input so Ctrl key events reach the window
+        if (r.hasAttribute('data-variants') && document.activeElement && document.activeElement.tagName === 'INPUT') {
+          document.activeElement.blur();
+        }
       }
     });
     listCont.addEventListener("mouseout", function (e) {
@@ -2657,6 +2954,7 @@
       if (r) {
         r.style.background = "";
         _highlightIdent = null;
+        if (_trackerHoveredRow === r) _trackerHoveredRow = null;
       }
     });
     listCont.addEventListener("contextmenu", function (e) {

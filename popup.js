@@ -416,6 +416,7 @@ function getRootProcs(fix) {
 function getProcCopyText(fix) {
   const rootProcs = getRootProcs(fix);
   if (!rootProcs.length) return null;
+  if (fix.type !== "fix") return null;
   const p = rootProcs[0];
   if (p.csvProc) {
     return fix.name ? fix.name.toUpperCase() : fix.ident.toUpperCase();
@@ -444,13 +445,13 @@ function renderResults(fixes) {
 
     const rootProcs = getRootProcs(f);
 
-    if (hlProcs && rootProcs.length > 0) {
+    if (hlProcs && rootProcs.length > 0 && f.type === "fix") {
       const hasSid = rootProcs.some(p => p.type === 'SID');
       color = hasSid ? "#ff9e22" : "#00cfcf";
       isMythic = true;
     }
 
-    if (rootProcs.length > 0) {
+    if (rootProcs.length > 0 && f.type === "fix") {
       const p = rootProcs[0];
       const num = p.proc.replace(f.ident, '').trim();
       pLabel = `${f.ident} ${num}`;
