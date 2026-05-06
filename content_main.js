@@ -2358,12 +2358,14 @@
     // waits, and departs again, the timestamp will have advanced by at least one bucket,
     // guaranteeing a re-fetch even when the physical origin is the same airport.
     let shouldFetch = false;
+    let callsignChanged = false;
     const firstPt = pts.length > 0 ? pts[0] : null;
-    // 10-minute bucket: changes whenever the flight clock advances past a boundary
-    const tsBucket = Math.floor(trackData.timestamp / 600000);
+    // 15-minute bucket: changes whenever the flight clock advances past a boundary
+    const tsBucket = Math.floor(trackData.timestamp / 900000);
 
     if (callsign && callsign !== trackerRouteCallsign) {
       shouldFetch = true;
+      callsignChanged = true;
       trackerRouteCallsign = callsign;
       trackerRouteTimestamp = trackData.timestamp;
       trackerRouteFirstPt = firstPt;
@@ -2374,7 +2376,7 @@
       // ~0.6 NM threshold — trail start moved to a different airport
       const startMoved = distSq > 0.0001;
       // Timestamp bucket changed — same airport but different departure time (return trip)
-      const bucketChanged = Math.floor(trackerRouteTimestamp / 600000) !== tsBucket;
+      const bucketChanged = Math.floor(trackerRouteTimestamp / 900000) !== tsBucket;
 
       if (startMoved || bucketChanged) {
         shouldFetch = true;
@@ -2384,9 +2386,10 @@
     }
 
     if (shouldFetch && !trackerRouteFetching) {
-      trackerRouteInfo = null;
+      var isFirstLoad = !trackerRouteInfo || callsignChanged;
+      if (isFirstLoad) trackerRouteInfo = null;
       trackerRouteFetching = true;
-      renderRouteInfo(); // Show "loading" state immediately
+      if (isFirstLoad) renderRouteInfo(); // Show skeleton only on first load
 
       // Helper: enrich origin/destination with airport names via OurAirports
       async function enrichAirports(r) {
@@ -2867,14 +2870,12 @@
   function airportExternalUrl(icao, country) {
     var id = normalizeAirportIdent(icao);
     if (!id) return "#";
-    return isUsAirportIdent(id, country)
-      ? "https://www.airnav.com/airport/" + id
-      : "https://www.liveatc.net/search/?icao=" + id;
+    return "https://skyvector.com/airport/" + id;
   }
 
   function airportExternalUrlLabel(icao, country) {
     if (!normalizeAirportIdent(icao)) return "Open";
-    return isUsAirportIdent(icao, country) ? "Open on AirNav" : "Open on LiveATC";
+    return "Open on SkyVector";
   }
 
   function renderRouteInfo() {
@@ -2882,12 +2883,36 @@
     if (!el) return;
 
     if (trackerRouteFetching) {
-      el.innerHTML = '<div style="padding:8px 14px;font-size:11px;color:#484f58;display:flex;align-items:center;gap:6px;">'
-        + '<span style="display:inline-block;width:12px;height:12px;border:2px solid #30363d;border-top-color:#58a6ff;border-radius:50%;animation:sw-trk-spin 0.8s linear infinite;"></span>'
-        + 'Looking up route...</div>';
+      // If we already have data, skip loading state entirely — update silently
+      if (trackerRouteInfo) return;
+      // First load or callsign change — show a skeleton placeholder
+      {
+        el.innerHTML = '<div style="padding:8px 14px 4px;display:flex;align-items:center;gap:6px;">'
+          + '<span style="font-size:14px;color:#58a6ff;">✈</span>'
+          + '<span style="display:inline-block;width:80px;height:16px;background:#21262d;border-radius:4px;"></span>'
+          + '</div>'
+          + '<div style="padding:2px 14px 6px;display:flex;align-items:flex-start;gap:6px;">'
+          + '<div style="display:flex;flex-direction:column;align-items:center;flex:1;">'
+          + '<span style="display:inline-block;width:50px;height:16px;background:#21262d;border-radius:4px;"></span>'
+          + '<span style="display:inline-block;width:70px;height:12px;background:#161b22;border-radius:3px;margin-top:4px;"></span>'
+          + '</div>'
+          + '<div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;padding-top:2px;">'
+          + '<span style="color:#58a6ff;font-size:14px;letter-spacing:2px;">──▶</span>'
+          + '</div>'
+          + '<div style="display:flex;flex-direction:column;align-items:center;flex:1;">'
+          + '<span style="display:inline-block;width:50px;height:16px;background:#21262d;border-radius:4px;"></span>'
+          + '<span style="display:inline-block;width:70px;height:12px;background:#161b22;border-radius:3px;margin-top:4px;"></span>'
+          + '</div>'
+          + '</div>'
+          + '<div style="display:flex;align-items:center;justify-content:center;gap:6px;padding:2px 14px 8px;">'
+          + '<span style="display:inline-block;width:12px;height:12px;border:2px solid #30363d;border-top-color:#58a6ff;border-radius:50%;animation:sw-trk-spin 0.8s linear infinite;"></span>'
+          + '<span style="font-size:11px;color:#484f58;">Looking up route...</span>'
+          + '</div>';
+      }
       el.style.display = "block";
       return;
     }
+
 
     if (!trackerRouteInfo) {
       // No route data — either no callsign, or lookup returned nothing
