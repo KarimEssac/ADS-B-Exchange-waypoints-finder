@@ -413,6 +413,16 @@ function getRootProcs(fix) {
   });
 }
 
+function getProcTypeLabel(rootProcs) {
+  const hasSid = rootProcs.some(p => p.type === 'SID');
+  const hasStar = rootProcs.some(p => p.type === 'STAR');
+  return hasSid && hasStar ? 'SID/STAR' : hasSid ? 'SID' : 'STAR';
+}
+
+function shouldCollapseProcSearchLabel(rootProcs) {
+  return rootProcs.length > 1 || rootProcs.some(p => p.csvProc);
+}
+
 function getProcCopyText(fix) {
   const rootProcs = getRootProcs(fix);
   if (!rootProcs.length) return null;
@@ -453,9 +463,14 @@ function renderResults(fixes) {
 
     if (rootProcs.length > 0 && f.type === "fix") {
       const p = rootProcs[0];
-      const num = p.proc.replace(f.ident, '').trim();
-      pLabel = `${f.ident} ${num}`;
-      pMeta = `<span style="font-size: 10px; margin-left: 4px; color: ${isMythic ? color : '#8b949e'}">- ${p.type}</span>`;
+      const typeText = shouldCollapseProcSearchLabel(rootProcs) ? getProcTypeLabel(rootProcs) : p.type;
+      if (shouldCollapseProcSearchLabel(rootProcs)) {
+        pLabel = f.ident;
+      } else {
+        const num = p.proc.replace(f.ident, '').trim();
+        pLabel = `${f.ident} ${num}`;
+      }
+      pMeta = `<span style="font-size: 10px; margin-left: 4px; color: ${isMythic ? color : '#8b949e'}">- ${typeText}</span>`;
     }
 
     if (f.type === "fbo") pLabel = pLabel.toUpperCase();

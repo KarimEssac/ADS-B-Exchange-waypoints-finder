@@ -405,7 +405,10 @@ async function loadCifp() {
                   const ptype = sec.substring(0, colonIdx).trim();
                   const names = sec.substring(colonIdx + 1).split("|").map(n => n.trim()).filter(Boolean);
                   for (const pname of names) {
-                    procs.push({ proc: pname, type: ptype, airport: "", csvProc: true });
+                    const tildeIdx = pname.indexOf('~');
+                    const procName = tildeIdx >= 0 ? pname.substring(0, tildeIdx) : pname;
+                    const suffix = tildeIdx >= 0 ? pname.substring(tildeIdx + 1) : undefined;
+                    procs.push({ proc: procName, type: ptype, airport: "", csvProc: true, suffix });
                   }
                 }
               }
@@ -460,7 +463,10 @@ async function loadCifp() {
                     const type = sec.substring(0, colonIdx).trim();
                     const names = sec.substring(colonIdx + 1).split("|").map(n => n.trim()).filter(Boolean);
                     for (const name of names) {
-                      procs.push({ proc: name, type, airport: "", csvProc: true });
+                      const tildeIdx = name.indexOf('~');
+                      const procName = tildeIdx >= 0 ? name.substring(0, tildeIdx) : name;
+                      const suffix = tildeIdx >= 0 ? name.substring(tildeIdx + 1) : undefined;
+                      procs.push({ proc: procName, type, airport: "", csvProc: true, suffix });
                     }
                   }
                 } else {
