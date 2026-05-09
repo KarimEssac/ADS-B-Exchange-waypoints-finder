@@ -456,28 +456,9 @@
   }
 
   function drawShape(type, x, y, r) {
-    if (type === "vor") {
-      // Hexagon
-      ctx.beginPath();
-      for (let i = 0; i < 6; i++) {
-        const a = (Math.PI / 3) * i - Math.PI / 6;
-        i === 0 ? ctx.moveTo(x + r * Math.cos(a), y + r * Math.sin(a))
-                : ctx.lineTo(x + r * Math.cos(a), y + r * Math.sin(a));
-      }
-      ctx.closePath();
-    } else if (type === "ndb") {
-      // Diamond
-      ctx.beginPath();
-      ctx.moveTo(x, y - r);
-      ctx.lineTo(x + r * 0.8, y);
-      ctx.lineTo(x, y + r);
-      ctx.lineTo(x - r * 0.8, y);
-      ctx.closePath();
-    } else {
-      // Circle for fixes, intersects, and airports
-      ctx.beginPath();
-      ctx.arc(x, y, r, 0, Math.PI * 2);
-    }
+    // Circle for all marker types (fixes, VOR, NDB, VFR, airports, etc.)
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
   }
 
   function drawFrame() {
