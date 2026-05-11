@@ -296,9 +296,9 @@
   // Optional chartSuffix appends the chart name suffix (e.g., "DEPARTURE", "ARRIVAL")
   function procVariantReadback(procName, chartSuffix) {
     const map = {'0':'ZERO','1':'ONE','2':'TWO','3':'THREE','4':'FOUR','5':'FIVE','6':'SIX','7':'SEVEN','8':'EIGHT','9':'NINE'};
-    const nato = {'A':'ALPHA','B':'BRAVO','C':'CHARLIE','D':'DELTA','E':'ECHO','F':'FOXTROT','G':'GOLF','H':'HOTEL',
-      'J':'JULIET','K':'KILO','L':'LIMA','M':'MIKE','N':'NOVEMBER','P':'PAPA','Q':'QUEBEC','R':'ROMEO',
-      'S':'SIERRA','T':'TANGO','U':'UNIFORM','V':'VICTOR','W':'WHISKEY','X':'XRAY','Y':'YANKEE','Z':'ZULU'};
+    const nato = {'A':'ALFA','B':'BRAVO','C':'CHARLIE','D':'DELTA','E':'ECHO','F':'FOXTROT','G':'GOLF','H':'HOTEL',
+      'J':'JULIETT','K':'KILO','L':'LIMA','M':'MIKE','N':'NOVEMBER','P':'PAPA','Q':'QUEBEC','R':'ROMEO',
+      'S':'SIERRA','T':'TANGO','U':'UNIFORM','V':'VICTOR','W':'WHISKEY','X':'X-RAY','Y':'YANKEE','Z':'ZULU'};
     // Extract suffix: "VEBIT 1D" -> "1D"
     const parts = procName.trim().split(/\s+/);
     if (parts.length < 2) return procName.toUpperCase();

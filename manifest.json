@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
   "name": "Sweden",
-  "version": "3.2",
+  "version": "3.3",
   "description": "Overlay waypoints, fixes, VORs, and NDBs on ADS-B Exchange map",
-  "permissions": ["storage", "scripting", "activeTab", "tabs"],
+  "permissions": ["storage", "scripting", "activeTab"],
   "host_permissions": [
     "https://globe.adsbexchange.com/*",
     "https://www.flightaware.com/*",
