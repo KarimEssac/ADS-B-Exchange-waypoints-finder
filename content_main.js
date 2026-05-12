@@ -682,7 +682,8 @@
       
       // Draw standard waypoints
       for (const fix of allFixes) {
-        if (!Settings.showFixes) continue;
+        const isVfr = fix.type === "vfr";
+        if ((isVfr && !Settings.showVfrs) || (!isVfr && !Settings.showFixes)) continue;
 
         const pt = latLonToPixel(fix.lat, fix.lon);
         if (!pt) continue;
