@@ -1,0 +1,3866 @@
+{
+  "summary": {
+    "total_changed": 259,
+    "new_waypoints": 169,
+    "updated_existing": 73,
+    "navaids_updated": 17,
+    "source": "FltPlan Digital Charts",
+    "airports_scraped": 131,
+    "appended_from": "finalized_csv_import",
+    "appended_at": "2026-05-15T14:38:00.254Z",
+    "appended_waypoint_changes": 41,
+    "appended_navaid_changes": 19
+  },
+  "waypoints": [
+    {
+      "ident": "ABBOTSFORD",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 49.214881,
+      "lon": -122.709294,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:ABBOTSFORD 1~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:ABBOTSFORD 1~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "ADVOX",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 51.578,
+      "lon": -114.5875,
+      "status": "updated",
+      "procedures_added": [
+        "STAR:ADVOX 9~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:ADVOX 9~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "ALOET",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 45.773056,
+      "lon": -74.484167,
+      "status": "updated",
+      "procedures_added": [
+        "STAR:ALOET 4~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:ALOET 4~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "ALREX",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 62.535681,
+      "lon": -114.453492,
+      "status": "updated",
+      "procedures_added": [
+        "SID:ALREX 3~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:ALREX 3~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "ANCOL",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 43.208611,
+      "lon": -80.015833,
+      "status": "updated",
+      "procedures_added": [
+        "SID:ANCOL 5~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:ANCOL 5~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "ANTOS",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 50.7775,
+      "lon": -105.218611,
+      "status": "updated",
+      "procedures_added": [
+        "STAR:ANTOS 6~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:ANTOS 6~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "APASS",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 44.8808,
+      "lon": -63.5086,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:APASS 8~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:APASS 8~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "AUTTO",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 50,
+      "lon": -100,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:AUTTO 1~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:AUTTO 1~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "AVALON",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 47.6186,
+      "lon": -52.7519,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:AVALON 5~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:AVALON 5~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "AVSEP",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 43.934444,
+      "lon": -80.109722,
+      "status": "updated",
+      "procedures_added": [
+        "SID:AVSEP 7~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:AVSEP 7~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "BEFAN",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 49.804444,
+      "lon": -97.986389,
+      "status": "updated",
+      "procedures_added": [
+        "STAR:BEFAN 5~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:BEFAN 5~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "BETES",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 42.832778,
+      "lon": -79.906944,
+      "status": "updated",
+      "procedures_added": [
+        "SID:BETES 3~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:BETES 3~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "BIRKO",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 51.475833,
+      "lon": -113.263667,
+      "status": "updated",
+      "procedures_added": [
+        "STAR:BIRKO 6~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:BIRKO 6~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "BOMET",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 44.17,
+      "lon": -77.983056,
+      "status": "updated",
+      "procedures_added": [
+        "SID:BOMET 7~DEPARTURE",
+        "SID:BOMET 8~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:BOMET 7~DEPARTURE",
+        "SID:BOMET 8~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "BOXUM",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 44.178056,
+      "lon": -80.201667,
+      "status": "updated",
+      "procedures_added": [
+        "STAR:BOXUM 7~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:BOXUM 7~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "BRAGG",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 51.103056,
+      "lon": -114.374444,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:BRAGG 5~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:BRAGG 5~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "BURIN",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 47.6186,
+      "lon": -52.7519,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:BURIN 6~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:BURIN 6~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "CABOT",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 44.879722,
+      "lon": -63.510278,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:CABOT 5~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:CABOT 5~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "CALGARY",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 51.118822,
+      "lon": -114.009933,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:CALGARY 8~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:CALGARY 8~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "CANUCK",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 49.1939,
+      "lon": -123.183997,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:CANUCK 7~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:CANUCK 7~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "CAPITAL",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 45.3225,
+      "lon": -75.667222,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:CAPITAL 5~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:CAPITAL 5~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "CAREN",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 49.91,
+      "lon": -97.2399,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:CAREN 4~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:CAREN 4~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "CARTER",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 50,
+      "lon": -100,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:CARTER 5~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:CARTER 5~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "CHARLOTTETOWN",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 46.288911,
+      "lon": -63.125175,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:CHARLOTTETOWN 3~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:CHARLOTTETOWN 3~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "CLEARBROOK",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 49.214881,
+      "lon": -122.709294,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:CLEARBROOK 3~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:CLEARBROOK 3~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "CLOAKE",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 48.6472,
+      "lon": -123.427792,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:CLOAKE 7~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:CLOAKE 7~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "COWBOY",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 51.118822,
+      "lon": -114.009933,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:COWBOY 2~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:COWBOY 2~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "CYPRESS",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 49.1939,
+      "lon": -123.183997,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:CYPRESS 3~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:CYPRESS 3~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "DAXIP",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 50,
+      "lon": -100,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:DAXIP 1~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:DAXIP 1~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "DEANS",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 45.3225,
+      "lon": -75.667222,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:DEANS 4~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:DEANS 4~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "DEDKI",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 43.690278,
+      "lon": -78.718333,
+      "status": "updated",
+      "procedures_added": [
+        "SID:DEDKI 5~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:DEDKI 5~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "DISCO",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 48.400278,
+      "lon": -123.178056,
+      "status": "updated",
+      "procedures_added": [
+        "STAR:DISCO 6~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:DISCO 6~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "DUNEM",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 52.0325,
+      "lon": -105.945278,
+      "status": "updated",
+      "procedures_added": [
+        "STAR:DUNEM 7~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:DUNEM 7~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "DUSOM",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 43.246389,
+      "lon": -79.673611,
+      "status": "updated",
+      "procedures_added": [
+        "SID:DUSOM 2~DEPARTURE",
+        "SID:DUSOM 3~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:DUSOM 2~DEPARTURE",
+        "SID:DUSOM 3~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "DUVOS",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 44.017778,
+      "lon": -80.001111,
+      "status": "updated",
+      "procedures_added": [
+        "STAR:DUVOS 4~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:DUVOS 4~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "DUXUM",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 48.909961,
+      "lon": -123.049104,
+      "status": "updated",
+      "procedures_added": [
+        "STAR:DUXUM 7~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:DUXUM 7~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "DUXUS",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 49.828333,
+      "lon": -97.242778,
+      "status": "updated",
+      "procedures_added": [
+        "SID:DUXUS 1~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:DUXUS 1~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "EBGAL",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 50.697,
+      "lon": -113.372,
+      "status": "updated",
+      "procedures_added": [
+        "STAR:EBGAL 7~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:EBGAL 7~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "EBKIN",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 44.086944,
+      "lon": -79.815,
+      "status": "updated",
+      "procedures_added": [
+        "SID:EBKIN 4~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:EBKIN 4~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "ELLKS",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 53.273611,
+      "lon": -114.685556,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:ELLKS 3~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:ELLKS 3~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "ENDBY",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 50.677833,
+      "lon": -118.938778,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:ENDBY 3~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:ENDBY 3~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "ERDED",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 52.189442,
+      "lon": -106.809673,
+      "status": "updated",
+      "procedures_added": [
+        "SID:ERDED 2~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:ERDED 2~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "ESVOX",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 52.170722,
+      "lon": -106.700792,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:ESVOX 2~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:ESVOX 2~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "FLAAM",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 51.477167,
+      "lon": -114.469667,
+      "status": "updated",
+      "procedures_added": [
+        "STAR:FLAAM 7~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:FLAAM 7~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "FLOKA",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 50,
+      "lon": -100,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:FLOKA 1~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:FLOKA 1~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "FOREY",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 50,
+      "lon": -100,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:FOREY 2~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:FOREY 2~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "FORT MAC",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 56.653333,
+      "lon": -111.223333,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:FORT MAC 2~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:FORT MAC 2~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "FRASER",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 49.1939,
+      "lon": -123.183997,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:FRASER 9~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:FRASER 9~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "FUNDY",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 44.879722,
+      "lon": -63.510278,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:FUNDY 5~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:FUNDY 5~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "GABET",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 53.463333,
+      "lon": -113.415,
+      "status": "updated",
+      "procedures_added": [
+        "SID:GABET 1~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:GABET 1~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "GABVO",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 49.080833,
+      "lon": -121.846389,
+      "status": "updated",
+      "procedures_added": [
+        "SID:GABVO 5~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:GABVO 5~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "GEORGIA",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 49.1939,
+      "lon": -123.183997,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:GEORGIA 8~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:GEORGIA 8~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "GOOSE BAY",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 58.7392,
+      "lon": -94.065,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:GOOSE BAY 1~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:GOOSE BAY 1~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "GOPUP",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 43.729722,
+      "lon": -81.558056,
+      "status": "updated",
+      "procedures_added": [
+        "SID:GOPUP 4~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:GOPUP 4~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "GORAK",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 49.95,
+      "lon": -104.133333,
+      "status": "updated",
+      "procedures_added": [
+        "STAR:GORAK 2~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:GORAK 2~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "GOXEV",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 50.695556,
+      "lon": -120.404444,
+      "status": "updated",
+      "procedures_added": [
+        "SID:GOXEV 2~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:GOXEV 2~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "GRIZZ",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 49.1939,
+      "lon": -123.183997,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:GRIZZ 1~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:GRIZZ 1~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "GRIZZLY",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 49.1939,
+      "lon": -123.183997,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:GRIZZLY 5~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:GRIZZLY 5~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "HABBS",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 45.205278,
+      "lon": -74.417222,
+      "status": "updated",
+      "procedures_added": [
+        "STAR:HABBS 7~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:HABBS 7~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "HALIFAX",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 44.879722,
+      "lon": -63.510278,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:HALIFAX 4~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:HALIFAX 4~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "HAMPO",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 53.186111,
+      "lon": -113.74,
+      "status": "updated",
+      "procedures_added": [
+        "SID:HAMPO 2~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:HAMPO 2~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "HOPE",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 49.214881,
+      "lon": -122.709294,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:HOPE 5~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:HOPE 5~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "HORNBY",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 49.7108,
+      "lon": -124.8867,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:HORNBY 2~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:HORNBY 2~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "IGSOX",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 53.1175,
+      "lon": -113.069444,
+      "status": "updated",
+      "procedures_added": [
+        "STAR:IGSOX 3~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:IGSOX 3~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "IGVEP",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 50.707833,
+      "lon": -114.658,
+      "status": "updated",
+      "procedures_added": [
+        "STAR:IGVEP 7~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:IGVEP 7~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "IKLEN",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 44.056111,
+      "lon": -79.680278,
+      "status": "updated",
+      "procedures_added": [
+        "SID:IKLEN 3~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:IKLEN 3~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "ILIXU",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 44.033333,
+      "lon": -77.4,
+      "status": "updated",
+      "procedures_added": [
+        "STAR:ILIXU 1~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:ILIXU 1~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "IMEBA",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 44.249444,
+      "lon": -79.054444,
+      "status": "updated",
+      "procedures_added": [
+        "STAR:IMEBA 9~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:IMEBA 9~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "IMPACT",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 50,
+      "lon": -100,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:IMPACT 4~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:IMPACT 4~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "ISLAND",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 49.1939,
+      "lon": -123.183997,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:ISLAND 1~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:ISLAND 1~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "ISLND",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 50,
+      "lon": -100,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:ISLND 1~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:ISLND 1~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "ITBOT",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 50.638333,
+      "lon": -114.78,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:ITBOT 4~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:ITBOT 4~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "ITRUS",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 53.309722,
+      "lon": -113.579722,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:ITRUS 2~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:ITRUS 2~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "JEVON",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 53.157,
+      "lon": -113.347,
+      "status": "updated",
+      "procedures_added": [
+        "SID:JEVON 1~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:JEVON 1~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "KAROT",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 47.111417,
+      "lon": -71.278917,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:KAROT 6~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:KAROT 6~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "KATOL",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 50,
+      "lon": -100,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:KATOL 3~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:KATOL 3~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "KAXOL",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 50,
+      "lon": -100,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:KAXOL 2~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:KAXOL 2~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "KEBRU",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 49.91,
+      "lon": -97.2399,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:KEBRU 6~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:KEBRU 6~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "KELOWNA",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 49.956111,
+      "lon": -119.377778,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:KELOWNA 1~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:KELOWNA 1~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "KELTO",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 49.1939,
+      "lon": -123.183997,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:KELTO 5~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:KELTO 5~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "KEMKA",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 50,
+      "lon": -100,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:KEMKA 6~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:KEMKA 6~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "KEPTA",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 50,
+      "lon": -100,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:KEPTA 3~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:KEPTA 3~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "KIPEV",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 51.103056,
+      "lon": -114.374444,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:KIPEV 4~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:KIPEV 4~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "KISEP",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 50,
+      "lon": -100,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:KISEP 4~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:KISEP 4~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "LABRADOR",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 58.7392,
+      "lon": -94.065,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:LABRADOR 1~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:LABRADOR 1~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "LAFLEUR",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 50,
+      "lon": -100,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:LAFLEUR 7~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:LAFLEUR 7~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "LAZO",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 49.7108,
+      "lon": -124.8867,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:LAZO 3~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:LAZO 3~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "LEAMY",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 45.3225,
+      "lon": -75.667222,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:LEAMY 5~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:LEAMY 5~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "LEXON",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 55.132222,
+      "lon": -112.151667,
+      "status": "updated",
+      "procedures_added": [
+        "STAR:LEXON 5~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:LEXON 5~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "LIBUK",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 50,
+      "lon": -100,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:LIBUK 3~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:LIBUK 3~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "LINNG",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 43.302778,
+      "lon": -79.354722,
+      "status": "updated",
+      "procedures_added": [
+        "STAR:LINNG 3~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:LINNG 3~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "LIONN",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 49.1939,
+      "lon": -123.183997,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:LIONN 5~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:LIONN 5~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "LIRLA",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 44.879722,
+      "lon": -63.510278,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:LIRLA 5~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:LIRLA 5~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "LONDON",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 43.032844,
+      "lon": -81.149003,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:LONDON 2~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:LONDON 2~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "MADYN",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 51.495,
+      "lon": -114.266111,
+      "status": "updated",
+      "procedures_added": [
+        "STAR:MADYN 3~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:MADYN 3~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "MALTB",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 50,
+      "lon": -100,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:MALTB 1~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:MALTB 1~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "MATES",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 50,
+      "lon": -100,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:MATES 6~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:MATES 6~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "MAVAN",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 50,
+      "lon": -100,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:MAVAN 2~DEPARTURE",
+        "SID:MAVAN 3~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:MAVAN 2~DEPARTURE",
+        "SID:MAVAN 3~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "MAVOB",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 49.91,
+      "lon": -97.2399,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:MAVOB 7~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:MAVOB 7~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "MEALY",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 58.7392,
+      "lon": -94.065,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:MEALY 1~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:MEALY 1~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "MEECH",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 45.3225,
+      "lon": -75.667222,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:MEECH 4~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:MEECH 4~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "MERYT",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 49.941667,
+      "lon": -120.961667,
+      "status": "updated",
+      "procedures_added": [
+        "SID:MERYT 6~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:MERYT 6~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "MILL BAY",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 48.6472,
+      "lon": -123.427792,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:MILL BAY 1~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:MILL BAY 1~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "MIPOT",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 53.423667,
+      "lon": -113.792667,
+      "status": "updated",
+      "procedures_added": [
+        "SID:MIPOT 1~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:MIPOT 1~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "MIXUT",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 50,
+      "lon": -100,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:MIXUT 7~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:MIXUT 7~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "MONCTON",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 46.113189,
+      "lon": -64.677189,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:MONCTON 5~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:MONCTON 5~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "MONTREAL",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 45.4706,
+      "lon": -73.7408,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:MONTREAL 5~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:MONTREAL 5~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "MOVOT",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 52.170722,
+      "lon": -106.700792,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:MOVOT 2~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:MOVOT 2~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "MUSIB",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 49.1939,
+      "lon": -123.183997,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:MUSIB 1~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:MUSIB 1~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "NADEV",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 50,
+      "lon": -100,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:NADEV 3~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:NADEV 3~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "NAKBO",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 47.6186,
+      "lon": -52.7519,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:NAKBO 6~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:NAKBO 6~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "NORAK",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 49.7385,
+      "lon": -96.5245,
+      "status": "updated",
+      "procedures_added": [
+        "STAR:NORAK 6~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:NORAK 6~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "NORDIK",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 50,
+      "lon": -100,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:NORDIK 4~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:NORDIK 4~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "NORIP",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 49.956111,
+      "lon": -119.377778,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:NORIP 5~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:NORIP 5~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "NOSIK",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 50,
+      "lon": -100,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:NOSIK 4~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:NOSIK 4~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "NOTER",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 50,
+      "lon": -100,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:NOTER 4~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:NOTER 4~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "NOXOG",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 52.170722,
+      "lon": -106.700792,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:NOXOG 2~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:NOXOG 2~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "NUBER",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 43.457778,
+      "lon": -80.3775,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:NUBER 6~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:NUBER 6~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "NUBOM",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 50,
+      "lon": -100,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:NUBOM 3~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:NUBOM 3~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "NUGOP",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 50,
+      "lon": -100,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:NUGOP 6~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:NUGOP 6~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "OAKVL",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 43.319442,
+      "lon": -79.696114,
+      "status": "updated",
+      "procedures_added": [
+        "SID:OAKVL 3~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:OAKVL 3~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "ODGOV",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 50.598889,
+      "lon": -105.428889,
+      "status": "updated",
+      "procedures_added": [
+        "STAR:ODGOV 6~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:ODGOV 6~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "OILRS",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 52.624167,
+      "lon": -113.519444,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:OILRS 2~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:OILRS 2~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "OLAVO",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 47.040464,
+      "lon": -72.167208,
+      "status": "updated",
+      "procedures_added": [
+        "STAR:OLAVO 4~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:OLAVO 4~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "OMINO",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 56.653333,
+      "lon": -111.223333,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:OMINO 2~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:OMINO 2~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "OMVAR",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 50,
+      "lon": -100,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:OMVAR 1~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:OMVAR 1~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "OTTAWA",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 45.3225,
+      "lon": -75.667222,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:OTTAWA 4~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:OTTAWA 4~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "PEGGY",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 44.879722,
+      "lon": -63.510278,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:PEGGY 5~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:PEGGY 5~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "PEMBA",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 50,
+      "lon": -100,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:PEMBA 6~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:PEMBA 6~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "PEPNO",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 49.1939,
+      "lon": -123.183997,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:PEPNO 5~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:PEPNO 5~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "PERLO",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 50,
+      "lon": -100,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:PERLO 4~DEPARTURE",
+        "SID:PERLO 5~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:PERLO 4~DEPARTURE",
+        "SID:PERLO 5~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "PESAC",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 46.548978,
+      "lon": -72.186919,
+      "status": "updated",
+      "procedures_added": [
+        "STAR:PESAC 4~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:PESAC 4~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "PETTE",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 50,
+      "lon": -100,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:PETTE 2~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:PETTE 2~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "PIGLU",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 48.645,
+      "lon": -123.906667,
+      "status": "updated",
+      "procedures_added": [
+        "STAR:PIGLU 5~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:PIGLU 5~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "PITT MEADOWS",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 49.214881,
+      "lon": -122.709294,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:PITT MEADOWS 4~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:PITT MEADOWS 4~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "PRINCE GEORGE",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 53.884311,
+      "lon": -122.666553,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:PRINCE GEORGE 5~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:PRINCE GEORGE 5~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "PRINCETON",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 49.956111,
+      "lon": -119.377778,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:PRINCETON 6~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:PRINCETON 6~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "QUEBEC",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 46.7911,
+      "lon": -71.393303,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:QUEBEC 6~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:QUEBEC 6~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "RAGID",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 47.6186,
+      "lon": -52.7519,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:RAGID 6~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:RAGID 6~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "REGINA",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 50.431939,
+      "lon": -104.660906,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:REGINA 2~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:REGINA 2~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "RESAX",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 53.936167,
+      "lon": -113.16,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:RESAX 1~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:RESAX 1~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "RICHMOND",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 49.1939,
+      "lon": -123.183997,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:RICHMOND 8~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:RICHMOND 8~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "RIGUS",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 50,
+      "lon": -100,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:RIGUS 5~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:RIGUS 5~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "ROCKET",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 50,
+      "lon": -100,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:ROCKET 3~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:ROCKET 3~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "RRALF",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 50,
+      "lon": -100,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:RRALF 3~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:RRALF 3~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "SARATOGA",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 49.7108,
+      "lon": -124.8867,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:SARATOGA 1~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:SARATOGA 1~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "SASKATOON",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 52.170722,
+      "lon": -106.700792,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:SASKATOON 9~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:SASKATOON 9~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "SAULT",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 46.480556,
+      "lon": -84.509444,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:SAULT 8~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:SAULT 8~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "SEBET",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 50,
+      "lon": -100,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:SEBET 1~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:SEBET 1~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "SEBIP",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 50,
+      "lon": -100,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:SEBIP 2~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:SEBIP 2~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "SEDOG",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 44.009722,
+      "lon": -79.584722,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:SEDOG 6~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:SEDOG 6~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "SEKAB",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 49.956111,
+      "lon": -119.377778,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:SEKAB 5~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:SEKAB 5~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "SIMTO",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 47.056389,
+      "lon": -70.829167,
+      "status": "updated",
+      "procedures_added": [
+        "STAR:SIMTO 4~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:SIMTO 4~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "SOUND",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 49.1939,
+      "lon": -123.183997,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:SOUND 7~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:SOUND 7~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "SPRINGBANK",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 51.103056,
+      "lon": -114.374444,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:SPRINGBANK 4~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:SPRINGBANK 4~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "ST JOHNS",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 47.6186,
+      "lon": -52.7519,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:ST JOHNS 8~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:ST JOHNS 8~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "STAMPEDE",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 51.118822,
+      "lon": -114.009933,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:STAMPEDE 2~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:STAMPEDE 2~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "STANLEY",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 49.1939,
+      "lon": -123.183997,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:STANLEY 5~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:STANLEY 5~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "TETAG",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 54.071464,
+      "lon": -114.132603,
+      "status": "updated",
+      "procedures_added": [
+        "STAR:TETAG 2~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:TETAG 2~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "TEVAD",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 50,
+      "lon": -100,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:TEVAD 2~DEPARTURE",
+        "SID:TEVAD 3~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:TEVAD 2~DEPARTURE",
+        "SID:TEVAD 3~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "TEXAL",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 56.653333,
+      "lon": -111.223333,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:TEXAL 1~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:TEXAL 1~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "THUNDER BAY",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 48.3719,
+      "lon": -89.323897,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:THUNDER BAY 1~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:THUNDER BAY 1~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "TIDUK",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 49.214881,
+      "lon": -122.709294,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:TIDUK 7~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:TIDUK 7~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "TIGAG",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 50,
+      "lon": -100,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:TIGAG 3~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:TIGAG 3~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "TIGOR",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 47.415194,
+      "lon": -54.113917,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:TIGOR 5~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:TIGOR 5~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "TILAC",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 50,
+      "lon": -100,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:TILAC 2~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:TILAC 2~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "TORNGAT",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 58.7392,
+      "lon": -94.065,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:TORNGAT 1~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:TORNGAT 1~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "TORONTO",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 50,
+      "lon": -100,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:TORONTO 4~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:TORONTO 4~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "TOTUB",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 49.214881,
+      "lon": -122.709294,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:TOTUB 5~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:TOTUB 5~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "TULEK",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 50,
+      "lon": -100,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:TULEK 4~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:TULEK 4~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "UDGOR",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 50,
+      "lon": -100,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:UDGOR 1~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:UDGOR 1~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "UDKUV",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 52.170722,
+      "lon": -106.700792,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:UDKUV 2~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:UDKUV 2~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "UDNOX",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 47.6186,
+      "lon": -52.7519,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:UDNOX 5~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:UDNOX 5~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "URSAL",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 50,
+      "lon": -100,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:URSAL 4~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:URSAL 4~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "VANCOUVER",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 49.1939,
+      "lon": -123.183997,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:VANCOUVER 4~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:VANCOUVER 4~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "VERDO",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 50,
+      "lon": -100,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:VERDO 7~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:VERDO 7~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "VERKO",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 47.6186,
+      "lon": -52.7519,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:VERKO 1~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:VERKO 1~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "VESGA",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 49.214881,
+      "lon": -122.709294,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:VESGA 6~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:VESGA 6~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "VIBLI",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 47.6186,
+      "lon": -52.7519,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:VIBLI 6~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:VIBLI 6~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "VICTORIA",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 48.6472,
+      "lon": -123.427792,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:VICTORIA 6~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:VICTORIA 6~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "VIKTU",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 56.653333,
+      "lon": -111.223333,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:VIKTU 1~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:VIKTU 1~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "VITEV",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 49.47,
+      "lon": -122.173333,
+      "status": "updated",
+      "procedures_added": [
+        "STAR:VITEV 6~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:VITEV 6~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "VOGIG",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 49.1939,
+      "lon": -123.183997,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:VOGIG 2~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:VOGIG 2~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "WALLEYE",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 49.1939,
+      "lon": -123.183997,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:WALLEYE 3~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:WALLEYE 3~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "WATERLOO",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 43.460833,
+      "lon": -80.378611,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:WATERLOO 3~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:WATERLOO 3~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "WHISTLER",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 49.1939,
+      "lon": -123.183997,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "STAR:WHISTLER 9~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:WHISTLER 9~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "WINDSOR",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 42.2756,
+      "lon": -82.955597,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:WINDSOR 5~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:WINDSOR 5~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "WINNIPEG",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 49.91,
+      "lon": -97.2399,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:WINNIPEG 3~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:WINNIPEG 3~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "YELLOWKNIFE",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 62.4628,
+      "lon": -114.440003,
+      "status": "new_waypoint",
+      "procedures_added": [
+        "SID:YELLOWKNIFE 2~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:YELLOWKNIFE 2~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "AMBIL",
+      "country_code": "CO",
+      "country_name": "Colombia",
+      "lat": 10.834444,
+      "lon": -77.097778,
+      "status": "updated",
+      "procedures_added": [
+        "STAR:AMBIL 5~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:AMBIL 5~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "LAKES",
+      "country_code": "HK",
+      "country_name": "Hong Kong",
+      "lat": null,
+      "lon": null,
+      "status": "updated",
+      "procedures_added": [
+        "SID:LAKES 4~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:LAKES 4~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "ARROW",
+      "country_code": "JP",
+      "country_name": "Japan",
+      "lat": 35.766356,
+      "lon": 141.491447,
+      "status": "updated",
+      "procedures_added": [
+        "SID:ARROW 4~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:ARROW 4~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "DUVRO",
+      "country_code": "MX",
+      "country_name": "Mexico",
+      "lat": 25.906111,
+      "lon": -101.066667,
+      "status": "updated",
+      "procedures_added": [
+        "SID:DUVRO 1~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:DUVRO 1~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "KARIS",
+      "country_code": "MX",
+      "country_name": "Mexico",
+      "lat": 28.420833,
+      "lon": -105.7525,
+      "status": "updated",
+      "procedures_added": [
+        "SID:KARIS 3~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:KARIS 3~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "LESIS",
+      "country_code": "MX",
+      "country_name": "Mexico",
+      "lat": 23.003333,
+      "lon": -91.587778,
+      "status": "updated",
+      "procedures_added": [
+        "SID:LESIS 4~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:LESIS 4~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "MINAS",
+      "country_code": "MX",
+      "country_name": "Mexico",
+      "lat": 29.211389,
+      "lon": -106.019167,
+      "status": "updated",
+      "procedures_added": [
+        "STAR:MINAS 1~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:MINAS 1~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "RODEO",
+      "country_code": "MX",
+      "country_name": "Mexico",
+      "lat": 25.339253,
+      "lon": -104.784292,
+      "status": "updated",
+      "procedures_added": [
+        "SID:RODEO 2~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:RODEO 2~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "RIVER",
+      "country_code": "NL",
+      "country_name": "Netherlands (the)",
+      "lat": 51.912764,
+      "lon": 4.132594,
+      "status": "updated",
+      "procedures_added": [
+        "STAR:RIVER 4~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:RIVER 4~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "ELBOW",
+      "country_code": "NZ",
+      "country_name": "New Zealand",
+      "lat": -39.267178,
+      "lon": 176.866244,
+      "status": "updated",
+      "procedures_added": [
+        "STAR:ELBOW 4~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:ELBOW 4~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "STONY",
+      "country_code": "NZ",
+      "country_name": "New Zealand",
+      "lat": -42.984442,
+      "lon": 173.086194,
+      "status": "updated",
+      "procedures_added": [
+        "SID:STONY 4~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:STONY 4~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "SHARK",
+      "country_code": "UK",
+      "country_name": "United Kingdom",
+      "lat": null,
+      "lon": null,
+      "status": "updated",
+      "procedures_added": [
+        "STAR:SHARK 5~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:SHARK 5~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "EMETO",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 49.413333,
+      "lon": -119.790833,
+      "status": "updated",
+      "source_airports": [
+        "CYAB"
+      ],
+      "procedures_added": [
+        "SID:EMETO 1~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:EMETO 1~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "KELSY",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 50.455,
+      "lon": -126.066667,
+      "status": "updated",
+      "source_airports": [
+        "CYBL"
+      ],
+      "procedures_added": [
+        "SID:KELSY 1~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:KELSY 1~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "ELBOW",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 51.103983,
+      "lon": -114.369378,
+      "status": "new_waypoint",
+      "source_airports": [
+        "CYBW"
+      ],
+      "procedures_added": [
+        "STAR:ELBOW 4~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:ELBOW 4~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "IMADU",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 49.054969,
+      "lon": -123.869864,
+      "status": "new_waypoint",
+      "source_airports": [
+        "CYCD"
+      ],
+      "procedures_added": [
+        "SID:IMADU 1~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:IMADU 1~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "EPVAD",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 61.3711,
+      "lon": -139.041,
+      "status": "new_waypoint",
+      "source_airports": [
+        "CYDB"
+      ],
+      "procedures_added": [
+        "SID:EPVAD 3~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:EPVAD 3~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "MEMIE",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 61.3711,
+      "lon": -139.041,
+      "status": "new_waypoint",
+      "source_airports": [
+        "CYDB"
+      ],
+      "procedures_added": [
+        "SID:MEMIE 3~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:MEMIE 3~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "NAMAO",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 53.667933,
+      "lon": -113.472547,
+      "status": "new_waypoint",
+      "source_airports": [
+        "CYED"
+      ],
+      "procedures_added": [
+        "SID:NAMAO 2~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:NAMAO 2~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "MINAS",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 44.880797,
+      "lon": -63.508597,
+      "status": "new_waypoint",
+      "source_airports": [
+        "CYHZ"
+      ],
+      "procedures_added": [
+        "STAR:MINAS 1~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:MINAS 1~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "ALETU",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 72.689494,
+      "lon": -77.968942,
+      "status": "new_waypoint",
+      "source_airports": [
+        "CYIO"
+      ],
+      "procedures_added": [
+        "SID:ALETU 1~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:ALETU 1~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "DUDSO",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 45.648333,
+      "lon": -73.650278,
+      "status": "updated",
+      "source_airports": [
+        "CYOD"
+      ],
+      "procedures_added": [
+        "SID:DUDSO 1~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:DUDSO 1~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "KATPU",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 54.405,
+      "lon": -110.279,
+      "status": "new_waypoint",
+      "source_airports": [
+        "CYOD"
+      ],
+      "procedures_added": [
+        "SID:KATPU 1~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:KATPU 1~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "LEVUD",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 54.405,
+      "lon": -110.279,
+      "status": "new_waypoint",
+      "source_airports": [
+        "CYOD"
+      ],
+      "procedures_added": [
+        "SID:LEVUD 1~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:LEVUD 1~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "RIVER",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 45.322497,
+      "lon": -75.669197,
+      "status": "new_waypoint",
+      "source_airports": [
+        "CYOW"
+      ],
+      "procedures_added": [
+        "STAR:RIVER 4~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:RIVER 4~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "KAVET",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 53.2142,
+      "lon": -105.672997,
+      "status": "new_waypoint",
+      "source_airports": [
+        "CYPA"
+      ],
+      "procedures_added": [
+        "STAR:KAVET 3~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:KAVET 3~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "PEKTO",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 53.2142,
+      "lon": -105.672997,
+      "status": "new_waypoint",
+      "source_airports": [
+        "CYPA"
+      ],
+      "procedures_added": [
+        "STAR:PEKTO 3~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:PEKTO 3~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "ALOKA",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 52.949816,
+      "lon": -106.197614,
+      "status": "updated",
+      "source_airports": [
+        "CYPA"
+      ],
+      "procedures_added": [
+        "SID:ALOKA 1~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:ALOKA 1~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "DEDID",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 53.589873,
+      "lon": -105.35998,
+      "status": "updated",
+      "source_airports": [
+        "CYPA"
+      ],
+      "procedures_added": [
+        "SID:DEDID 2~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:DEDID 2~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "MEMGI",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 53.2142,
+      "lon": -105.672997,
+      "status": "new_waypoint",
+      "source_airports": [
+        "CYPA"
+      ],
+      "procedures_added": [
+        "SID:MEMGI 2~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:MEMGI 2~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "VEPRI",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 53.2142,
+      "lon": -105.672997,
+      "status": "new_waypoint",
+      "source_airports": [
+        "CYPA"
+      ],
+      "procedures_added": [
+        "SID:VEPRI 1~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:VEPRI 1~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "LESIS",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 48.3719,
+      "lon": -89.323897,
+      "status": "new_waypoint",
+      "source_airports": [
+        "CYQT"
+      ],
+      "procedures_added": [
+        "SID:LESIS 4~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:LESIS 4~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "NOVID",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 46.25225,
+      "lon": -73.222528,
+      "status": "updated",
+      "source_airports": [
+        "CYRQ"
+      ],
+      "procedures_added": [
+        "SID:NOVID 1~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:NOVID 1~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "PAPER",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 46.352797,
+      "lon": -72.679397,
+      "status": "new_waypoint",
+      "source_airports": [
+        "CYRQ"
+      ],
+      "procedures_added": [
+        "SID:PAPER 1~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:PAPER 1~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "MOWND",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 45.376667,
+      "lon": -66.657222,
+      "status": "updated",
+      "source_airports": [
+        "CYSJ"
+      ],
+      "procedures_added": [
+        "SID:MOWND 1~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:MOWND 1~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "KERNU",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 48.175,
+      "lon": -78.12,
+      "status": "updated",
+      "source_airports": [
+        "CYUY"
+      ],
+      "procedures_added": [
+        "SID:KERNU 3~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:KERNU 3~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "MUNBI",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 48.1105,
+      "lon": -78.3085,
+      "status": "updated",
+      "source_airports": [
+        "CYUY"
+      ],
+      "procedures_added": [
+        "SID:MUNBI 4~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:MUNBI 4~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "SHARK",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 49.1939,
+      "lon": -123.183997,
+      "status": "new_waypoint",
+      "source_airports": [
+        "CYVR"
+      ],
+      "procedures_added": [
+        "STAR:SHARK 5~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:SHARK 5~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "KARIS",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 49.91,
+      "lon": -97.2399,
+      "status": "new_waypoint",
+      "source_airports": [
+        "CYWG"
+      ],
+      "procedures_added": [
+        "SID:KARIS 3~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:KARIS 3~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "STONY",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 49.91,
+      "lon": -97.2399,
+      "status": "new_waypoint",
+      "source_airports": [
+        "CYWG"
+      ],
+      "procedures_added": [
+        "SID:STONY 4~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:STONY 4~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "ODLAN",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 50.1925,
+      "lon": -111.389167,
+      "status": "updated",
+      "source_airports": [
+        "CYXH"
+      ],
+      "procedures_added": [
+        "STAR:ODLAN 1~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:ODLAN 1~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "VESDO",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 49.9775,
+      "lon": -111.3175,
+      "status": "updated",
+      "source_airports": [
+        "CYXH"
+      ],
+      "procedures_added": [
+        "SID:VESDO 1~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:VESDO 1~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "DAPAL",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 60.708533,
+      "lon": -135.065706,
+      "status": "new_waypoint",
+      "source_airports": [
+        "CYXY"
+      ],
+      "procedures_added": [
+        "STAR:DAPAL 3~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:DAPAL 3~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "GOROV",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 59.305833,
+      "lon": -133.000556,
+      "status": "updated",
+      "source_airports": [
+        "CYXY"
+      ],
+      "procedures_added": [
+        "STAR:GOROV 2~ARRIVAL"
+      ],
+      "all_procedures": [
+        "STAR:GOROV 2~ARRIVAL"
+      ]
+    },
+    {
+      "ident": "KODEM",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 60.708533,
+      "lon": -135.065706,
+      "status": "new_waypoint",
+      "source_airports": [
+        "CYXY"
+      ],
+      "procedures_added": [
+        "SID:KODEM 4~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:KODEM 4~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "TAMKU",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 60.708533,
+      "lon": -135.065706,
+      "status": "new_waypoint",
+      "source_airports": [
+        "CYXY"
+      ],
+      "procedures_added": [
+        "SID:TAMKU 3~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:TAMKU 3~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "RODEO",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 51.118822,
+      "lon": -114.009933,
+      "status": "new_waypoint",
+      "source_airports": [
+        "CYYC"
+      ],
+      "procedures_added": [
+        "SID:RODEO 2~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:RODEO 2~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "IMIGU",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 54.8247,
+      "lon": -127.183,
+      "status": "new_waypoint",
+      "source_airports": [
+        "CYYD"
+      ],
+      "procedures_added": [
+        "SID:IMIGU 1~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:IMIGU 1~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "RAGAL",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 54.8247,
+      "lon": -127.183,
+      "status": "new_waypoint",
+      "source_airports": [
+        "CYYD"
+      ],
+      "procedures_added": [
+        "SID:RAGAL 1~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:RAGAL 1~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "BEXUD",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 49.4631,
+      "lon": -119.601997,
+      "status": "new_waypoint",
+      "source_airports": [
+        "CYYF"
+      ],
+      "procedures_added": [
+        "SID:BEXUD 1~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:BEXUD 1~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "MOBUD",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 49.4631,
+      "lon": -119.601997,
+      "status": "new_waypoint",
+      "source_airports": [
+        "CYYF"
+      ],
+      "procedures_added": [
+        "SID:MOBUD 1~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:MOBUD 1~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "ARROW",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 43.675936,
+      "lon": -79.629422,
+      "status": "new_waypoint",
+      "source_airports": [
+        "CYYZ"
+      ],
+      "procedures_added": [
+        "SID:ARROW 4~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:ARROW 4~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "DUVRO",
+      "country_code": "CA",
+      "country_name": "Canada",
+      "lat": 44.984403,
+      "lon": -64.9169,
+      "status": "new_waypoint",
+      "source_airports": [
+        "CYZX"
+      ],
+      "procedures_added": [
+        "SID:DUVRO 1~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:DUVRO 1~DEPARTURE"
+      ]
+    }
+  ],
+  "navaids": [
+    {
+      "ident": "YCD",
+      "name": "Nanaimo",
+      "type": "NDB",
+      "lat": 49.12779999,
+      "lon": -123.8720016,
+      "country_code": "CA",
+      "airport": "CYCD",
+      "status": "updated",
+      "source_airports": [
+        "CYCD"
+      ],
+      "procedures_added": [
+        "SID:NANAIMO 3~DEPARTURE",
+        "SID:LADYSMITH 2~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:NANAIMO 3~DEPARTURE",
+        "SID:LADYSMITH 2~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "YDF",
+      "name": "Deer Lake",
+      "type": "VOR-DME",
+      "lat": 49.23249817,
+      "lon": -57.2132988,
+      "country_code": "CA",
+      "airport": "CYDF",
+      "status": "updated",
+      "source_airports": [
+        "CYDF"
+      ],
+      "procedures_added": [
+        "SID:DEER LAKE 1~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:DEER LAKE 1~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "YFC",
+      "name": "Fredericton",
+      "type": "VORTAC",
+      "lat": 45.89530182,
+      "lon": -66.41889954,
+      "country_code": "CA",
+      "airport": "CYFC",
+      "status": "updated",
+      "source_airports": [
+        "CYFC"
+      ],
+      "procedures_added": [
+        "SID:FREDERICTON 2~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:FREDERICTON 2~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "ZHU",
+      "name": "Hauts-Bois",
+      "type": "NDB",
+      "lat": 45.56420135,
+      "lon": -73.34670258,
+      "country_code": "CA",
+      "airport": "CYHU",
+      "status": "updated",
+      "source_airports": [
+        "CYHU"
+      ],
+      "procedures_added": [
+        "SID:ST HUBERT 7~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:ST HUBERT 7~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "YJN",
+      "name": "St-Jean",
+      "type": "VORTAC",
+      "lat": 45.25579834,
+      "lon": -73.32129669,
+      "country_code": "CA",
+      "airport": "CYJN",
+      "status": "updated",
+      "source_airports": [
+        "CYJN"
+      ],
+      "procedures_added": [
+        "SID:ST JEAN 6~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:ST JEAN 6~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "YMX",
+      "name": "Mirabel",
+      "type": "VOR-DME",
+      "lat": 45.88830185,
+      "lon": -74.3757019,
+      "country_code": "CA",
+      "airport": "CYMX",
+      "status": "updated",
+      "source_airports": [
+        "CYMX"
+      ],
+      "procedures_added": [
+        "SID:MIRABEL 9~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:MIRABEL 9~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "YQF",
+      "name": "Red Deer",
+      "type": "NDB",
+      "lat": 52.12829971,
+      "lon": -113.8990021,
+      "country_code": "CA",
+      "airport": "CYQF",
+      "status": "updated",
+      "source_airports": [
+        "CYQF"
+      ],
+      "procedures_added": [
+        "SID:RED DEER 2~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:RED DEER 2~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "YQX",
+      "name": "Gander",
+      "type": "VORTAC",
+      "lat": 48.89970016,
+      "lon": -54.53490067,
+      "country_code": "CA",
+      "airport": "CYQX",
+      "status": "updated",
+      "source_airports": [
+        "CYQX"
+      ],
+      "procedures_added": [
+        "SID:GANDER 6~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:GANDER 6~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "YSJ",
+      "name": "Saint John",
+      "type": "VOR-DME",
+      "lat": 45.40719986,
+      "lon": -65.8707962,
+      "country_code": "CA",
+      "airport": "CYSJ",
+      "status": "updated",
+      "source_airports": [
+        "CYSJ"
+      ],
+      "procedures_added": [
+        "SID:SAINT JOHN 5~DEPARTURE",
+        "SID:HAMPTON 3~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:SAINT JOHN 5~DEPARTURE",
+        "SID:HAMPTON 3~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "YTH",
+      "name": "Thompson",
+      "type": "VOR-DME",
+      "lat": 55.81119919,
+      "lon": -97.82530212,
+      "country_code": "CA",
+      "airport": "CYTH",
+      "status": "updated",
+      "source_airports": [
+        "CYTH"
+      ],
+      "procedures_added": [
+        "SID:THOMPSON 3~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:THOMPSON 3~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "YUY",
+      "name": "Rouyn",
+      "type": "NDB",
+      "lat": 48.17279816,
+      "lon": -78.93859863,
+      "country_code": "CA",
+      "airport": "CYUY",
+      "status": "updated",
+      "source_airports": [
+        "CYUY"
+      ],
+      "procedures_added": [
+        "SID:ROUYN 1~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:ROUYN 1~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "YVC",
+      "name": "La Ronge",
+      "type": "VOR-DME",
+      "lat": 55.15829849,
+      "lon": -105.2669983,
+      "country_code": "CA",
+      "airport": "CYVC",
+      "status": "updated",
+      "source_airports": [
+        "CYVC"
+      ],
+      "procedures_added": [
+        "SID:LA RONGE 2~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:LA RONGE 2~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "YBL",
+      "name": "Campbell River",
+      "type": "NDB",
+      "lat": 50.00640106,
+      "lon": -125.3570023,
+      "country_code": "CA",
+      "airport": "CYBL",
+      "status": "updated",
+      "source_airports": [
+        "CYBL"
+      ],
+      "procedures_added": [
+        "SID:OYSTER 1~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:OYSTER 1~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "YEG",
+      "name": "Edmonton",
+      "type": "VORTAC",
+      "lat": 53.18560028,
+      "lon": -113.8669968,
+      "country_code": "CA",
+      "airport": "CYEG",
+      "status": "updated",
+      "source_airports": [
+        "CYED"
+      ],
+      "procedures_added": [
+        "SID:FREEDOM 2~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:FREEDOM 2~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "YMJ",
+      "name": "Moose Jaw",
+      "type": "VORTAC",
+      "lat": 50.33110046,
+      "lon": -105.5630035,
+      "country_code": "CA",
+      "airport": "CYMJ",
+      "status": "updated",
+      "source_airports": [
+        "CYMJ"
+      ],
+      "procedures_added": [
+        "SID:MACAULEY 1~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:MACAULEY 1~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "YVR",
+      "name": "Vancouver",
+      "type": "VORTAC",
+      "lat": 49.07720184,
+      "lon": -123.1490021,
+      "country_code": "CA",
+      "airport": "CYVR",
+      "status": "updated",
+      "source_airports": [
+        "CZBB"
+      ],
+      "procedures_added": [
+        "SID:SALISH 1~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:SALISH 1~DEPARTURE"
+      ]
+    },
+    {
+      "ident": "UZV",
+      "name": "Sept Iles",
+      "type": "TACAN",
+      "lat": 50.22389984,
+      "lon": -66.26609802,
+      "country_code": "CA",
+      "airport": "CYZV",
+      "status": "updated",
+      "source_airports": [
+        "CYZV"
+      ],
+      "procedures_added": [
+        "SID:SEPT ILES 4~DEPARTURE"
+      ],
+      "all_procedures": [
+        "SID:SEPT ILES 4~DEPARTURE"
+      ]
+    }
+  ]
+}
