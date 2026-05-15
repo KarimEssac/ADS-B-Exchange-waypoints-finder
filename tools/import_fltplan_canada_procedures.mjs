@@ -11,6 +11,8 @@ const DEFAULTS = {
   report: "canada_fltplan_procedures_report.json",
   batchSize: 20,
   delayMs: 300,
+  checkpoint: true,
+  resume: true,
 };
 
 const NUMBER_WORDS = new Map([
@@ -48,6 +50,8 @@ Options:
   --limit <n>             Limit airport count for testing
   --batch-size <n>        Re-login after each batch (default: ${DEFAULTS.batchSize})
   --delay-ms <n>          Delay between airport requests (default: ${DEFAULTS.delayMs})
+  --no-checkpoint         Do not write --charts-json after each airport
+  --no-resume             Ignore an existing --charts-json cache and start fresh
   --help                  Show this help
 
 Credentials:
@@ -76,6 +80,8 @@ function parseArgs(argv) {
     else if (arg === "--update-only") args.updateOnly = true;
     else if (arg === "--dry-run") args.dryRun = true;
     else if (arg === "--no-network") args.noNetwork = true;
+    else if (arg === "--no-checkpoint") args.checkpoint = false;
+    else if (arg === "--no-resume") args.resume = false;
     else if (arg === "--airports") args.airports = requireValue(argv, ++i, arg);
     else if (arg === "--waypoints") args.waypoints = requireValue(argv, ++i, arg);
     else if (arg === "--navaids") args.navaids = requireValue(argv, ++i, arg);
@@ -395,13 +401,25 @@ async function collectCharts(airports, args) {
     airportCount: airports.length,
     airports: {},
   };
+  if (args.resume && fs.existsSync(args.chartsJson)) {
+    const existing = readJsonFile(args.chartsJson);
+    collected.source = existing.source || collected.source;
+    collected.collectedAt = existing.collectedAt || collected.collectedAt;
+    collected.resumedAt = new Date().toISOString();
+    collected.airports = { ...(existing.airports || {}) };
+  }
 
   let session = null;
   for (let i = 0; i < airports.length; i++) {
+    const airport = airports[i];
+    if (args.resume && Object.prototype.hasOwnProperty.call(collected.airports, airport)) {
+      const charts = collected.airports[airport] || [];
+      console.log(`[${i + 1}/${airports.length}] ${airport}... cached (${charts.length} SID/STAR candidates)`);
+      continue;
+    }
     if (!session || (Number.isFinite(args.batchSize) && args.batchSize > 0 && i % args.batchSize === 0)) {
       session = await loginFltPlan(username, password);
     }
-    const airport = airports[i];
     process.stdout.write(`[${i + 1}/${airports.length}] ${airport}... `);
     const page = await request("https://www.FltPlan.com/AwListAppPlates.exe?a=1", {
       method: "POST",
@@ -420,13 +438,31 @@ async function collectCharts(airports, args) {
 
     const charts = extractChartEntries(page.text, airport);
     collected.airports[airport] = charts;
+    collected.checkpointedAt = new Date().toISOString();
+    collected.completedAirports = airports.filter(code => Object.prototype.hasOwnProperty.call(collected.airports, code)).length;
     console.log(`${charts.length} SID/STAR candidates`);
+    if (args.checkpoint) writeCollectedCheckpoint(args.chartsJson, collected, args);
     await sleep(Math.max(0, Number(args.delayMs) || 0));
   }
 
+  collected.completedAirports = airports.filter(code => Object.prototype.hasOwnProperty.call(collected.airports, code)).length;
+  collected.finishedAt = new Date().toISOString();
   const merged = args.mergeExisting ? mergeCollectedCharts(args.chartsJson, collected) : collected;
-  fs.writeFileSync(args.chartsJson, JSON.stringify(merged, null, 2));
+  writeJsonAtomic(args.chartsJson, merged);
   return merged;
+}
+
+function writeCollectedCheckpoint(file, collected, args) {
+  const output = args.mergeExisting && !args.resume ? mergeCollectedCharts(file, collected) : collected;
+  writeJsonAtomic(file, output);
+}
+
+function writeJsonAtomic(file, value) {
+  const dir = path.dirname(file);
+  const base = path.basename(file);
+  const tmp = path.join(dir, `.${base}.${process.pid}.tmp`);
+  fs.writeFileSync(tmp, JSON.stringify(value, null, 2) + "\n", "utf8");
+  fs.renameSync(tmp, file);
 }
 
 function mergeCollectedCharts(file, collected) {
