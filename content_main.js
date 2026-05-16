@@ -1544,10 +1544,51 @@
     }
   }
 
+  // ── ADS-B Reset shortcut action ──────────────────────────────────────────
+  function doResetADSB() {
+    window.location.href = "https://globe.adsbexchange.com/?reset";
+  }
+
+  // ── Enable L, O, K ADS-B buttons action ────────────────────────────────
+  function doToggleLOK() {
+    const ids = ["L", "O", "K"];
+    let anyInactive = false;
+    for (const id of ids) {
+      const el = document.getElementById(id);
+      if (el && (el.classList.contains("inActiveButton") || !el.classList.contains("activeButton"))) {
+        anyInactive = true;
+        break;
+      }
+    }
+    for (const id of ids) {
+      const el = document.getElementById(id);
+      if (el) {
+        const isInactive = el.classList.contains("inActiveButton") || !el.classList.contains("activeButton");
+        if (anyInactive && isInactive) {
+          el.click();
+        } else if (!anyInactive && !isInactive) {
+          if (id === "O") {
+            el.click(); el.click(); el.click();
+          } else {
+            el.click();
+          }
+        }
+      }
+    }
+    logMsg(`[WPT] Toggled L, O, K ADS-B settings (now ${anyInactive ? "ON" : "OFF"}).`);
+  }
+
+  // Keyboard shortcut handlers
+  window.addEventListener("keydown", (e) => {
+    const tag = e.target.tagName;
+    if (tag === "INPUT" || tag === "TEXTAREA" || e.target.isContentEditable) return;
+    if (e.shiftKey && e.code === "KeyR") doResetADSB();
+    if (e.shiftKey && e.code === "KeyL") doToggleLOK();
+  });
+
   function createQuickAccessButton() {
     const btn = document.createElement("div");
     btn.id = "wpt-quick-access-btn";
-    btn.innerText = "Sweden Settings";
     btn.style.position = "fixed";
     
     // Restore saved position or use default
@@ -1582,6 +1623,61 @@
     btn.style.boxShadow = "0 4px 12px rgba(0,0,0,0.6)";
     btn.style.transition = "background 0.2s";
     btn.style.userSelect = "none";
+
+    // ── Inner layout: [Reset] [Sweden Settings] [LOK] ──
+    // Small helper style for the utility mini-buttons
+    const miniBtnCSS = `
+      display: flex; flex-direction: column; align-items: center; gap: 1px;
+      cursor: pointer; z-index: 1; margin: 0 5px;
+    `;
+    const miniInnerCSS = `
+      background: #30363d; color: #e6edf3; border: 1px solid #484f58;
+      border-radius: 4px; padding: 1px 4px; font-size: 9px; font-weight: 600;
+      line-height: 1; white-space: nowrap; transition: background 0.15s, border-color 0.15s;
+    `;
+    const shortcutLabelCSS = `
+      font-size: 7px; color: #6e7681; font-weight: 600; letter-spacing: 0.3px;
+      line-height: 1; white-space: nowrap; font-family: monospace;
+    `;
+
+    // Reset ADS-B button (left side)
+    const resetWrap = document.createElement("div");
+    resetWrap.style.cssText = miniBtnCSS;
+    const resetShortcut = document.createElement("span");
+    resetShortcut.textContent = "S+R";
+    resetShortcut.style.cssText = shortcutLabelCSS;
+    const resetBtn = document.createElement("span");
+    resetBtn.textContent = "Reset";
+    resetBtn.style.cssText = miniInnerCSS;
+    resetBtn.addEventListener("mouseover", () => { resetBtn.style.background = "#484f58"; resetBtn.style.borderColor = "#58a6ff"; });
+    resetBtn.addEventListener("mouseout", () => { resetBtn.style.background = "#30363d"; resetBtn.style.borderColor = "#484f58"; });
+    resetBtn.addEventListener("click", (e) => { e.stopPropagation(); doResetADSB(); });
+    resetWrap.appendChild(resetShortcut);
+    resetWrap.appendChild(resetBtn);
+
+    // Title (center)
+    const titleSpan = document.createElement("span");
+    titleSpan.textContent = "Sweden Settings";
+    titleSpan.style.cssText = "flex: 1; text-align: center; pointer-events: none; font-size: 13px; white-space: nowrap;";
+
+    // Enable LOK button (right side)
+    const lokWrap = document.createElement("div");
+    lokWrap.style.cssText = miniBtnCSS;
+    const lokShortcut = document.createElement("span");
+    lokShortcut.textContent = "S+L";
+    lokShortcut.style.cssText = shortcutLabelCSS;
+    const lokBtn = document.createElement("span");
+    lokBtn.textContent = "LOK";
+    lokBtn.style.cssText = miniInnerCSS;
+    lokBtn.addEventListener("mouseover", () => { lokBtn.style.background = "#484f58"; lokBtn.style.borderColor = "#58a6ff"; });
+    lokBtn.addEventListener("mouseout", () => { lokBtn.style.background = "#30363d"; lokBtn.style.borderColor = "#484f58"; });
+    lokBtn.addEventListener("click", (e) => { e.stopPropagation(); doToggleLOK(); });
+    lokWrap.appendChild(lokShortcut);
+    lokWrap.appendChild(lokBtn);
+
+    btn.appendChild(resetWrap);
+    btn.appendChild(titleSpan);
+    btn.appendChild(lokWrap);
     
     btn.addEventListener("mouseover", () => {
       btn.style.background = "linear-gradient(135deg, #21262d, #272f44)";
